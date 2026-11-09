@@ -1,0 +1,187 @@
+{
+  "reference": "Transformers dequantized FP8 checkpoint, BF16 compute and FP32 recurrent state",
+  "candidate": "kern native FP8 weights, W8A8 prefill/W8A16 decode, BF16 recurrent state",
+  "kl_limit": 0.1,
+  "continuity": [
+    {
+      "chunk": 128,
+      "eager": false,
+      "generated_ids": [
+        25358,
+        13,
+        271,
+        760,
+        6511,
+        314,
+        6124,
+        369,
+        25358,
+        13,
+        271,
+        760,
+        6511,
+        314,
+        6124,
+        369
+      ]
+    },
+    {
+      "chunk": 64,
+      "eager": false,
+      "generated_ids": [
+        25358,
+        13,
+        271,
+        760,
+        6511,
+        314,
+        6124,
+        369,
+        25358,
+        13,
+        271,
+        760,
+        6511,
+        314,
+        6124,
+        369
+      ]
+    },
+    {
+      "chunk": 128,
+      "eager": true,
+      "generated_ids": [
+        25358,
+        13,
+        271,
+        760,
+        6511,
+        314,
+        6124,
+        369,
+        25358,
+        13,
+        271,
+        760,
+        6511,
+        314,
+        6124,
+        369
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "prompt": "The capital of France is",
+      "kl_reference_native": 0.0012194148730486631,
+      "cosine": 0.9997617602348328,
+      "max_logit_error": 0.3125,
+      "generated_ids": [
+        11751,
+        13,
+        198,
+        760,
+        6511,
+        314,
+        9564,
+        369
+      ],
+      "reference_ids": [
+        11751,
+        13,
+        198,
+        760,
+        6511,
+        314,
+        9564,
+        369
+      ],
+      "token_matches": 8,
+      "tokens": 8
+    },
+    {
+      "prompt": "Write a Python function that computes the greatest common divisor using Euclid's algorithm.",
+      "kl_reference_native": 0.0038432362489402294,
+      "cosine": 0.9978015422821045,
+      "max_logit_error": 1.046875,
+      "generated_ids": [
+        271,
+        71093,
+        12305,
+        198,
+        727,
+        43364,
+        2784,
+        25
+      ],
+      "reference_ids": [
+        271,
+        71093,
+        12305,
+        198,
+        727,
+        43364,
+        2784,
+        25
+      ],
+      "token_matches": 8,
+      "tokens": 8
+    },
+    {
+      "prompt": "Explain why a database write ahead log must be persisted before the corresponding data page.",
+      "kl_reference_native": 0.0014357917243614793,
+      "cosine": 0.9995201826095581,
+      "max_logit_error": 0.375,
+      "generated_ids": [
+        271,
+        1206,
+        3418,
+        3069,
+        264,
+        4475,
+        9357,
+        6481
+      ],
+      "reference_ids": [
+        271,
+        1206,
+        3418,
+        3069,
+        264,
+        4475,
+        9357,
+        6481
+      ],
+      "token_matches": 8,
+      "tokens": 8
+    },
+    {
+      "prompt": "请解释数据库事务的原子性和持久性，并举一个转账的例子。",
+      "kl_reference_native": 0.006740296259522438,
+      "cosine": 0.9997122883796692,
+      "max_logit_error": 0.46875,
+      "generated_ids": [
+        271,
+        95772,
+        101756,
+        111834,
+        3709,
+        100026,
+        9616,
+        7817
+      ],
+      "reference_ids": [
+        271,
+        95772,
+        101756,
+        111834,
+        3709,
+        100026,
+        9616,
+        7817
+      ],
+      "token_matches": 8,
+      "tokens": 8
+    }
+  ]
+}

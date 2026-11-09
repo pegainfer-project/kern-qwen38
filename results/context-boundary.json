@@ -1,0 +1,25 @@
+{
+  "device": "NVIDIA RTX PRO 5000 72GB Blackwell",
+  "max_batch": 128,
+  "max_context": 262144,
+  "kv_pages_shuffled": true,
+  "max_context_boundary": true,
+  "boundary_lengths": [
+    262144,
+    65536,
+    4096
+  ],
+  "boundary_prior_state": "zero external cache, shared read-only zero pages",
+  "states_restored_before_singletons": true,
+  "kl_limit": 0.02,
+  "cases": [
+    {
+      "batch": 3,
+      "step": 0,
+      "mean_kl": 0.005501063074916601,
+      "max_kl": 0.013990327715873718,
+      "top1_matches": 3,
+      "mismatch_margins": []
+    }
+  ]
+}

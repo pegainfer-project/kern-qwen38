@@ -1,0 +1,13 @@
+{
+  "tool": "Compute Sanitizer memcheck",
+  "api_error_reporting": false,
+  "reason": "kern parameter enumeration intentionally ends with CUDA_ERROR_INVALID_VALUE from cuFuncGetParamInfo",
+  "device_memory_errors": 0,
+  "prompt_tokens": 5,
+  "generated_tokens": 2,
+  "eager": true,
+  "generated_ids": [
+    11751,
+    13
+  ]
+}

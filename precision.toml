@@ -1,0 +1,33 @@
+# Storage policy used by the native single-request model bundle.
+[target]
+architecture = "sm_120"
+device = "NVIDIA RTX PRO 5000 72GB Blackwell"
+checkpoint = "Qwen/Qwen3.8-27B-FP8"
+revision = "c3a462cc3d38cf351f3b26cbd763469eeb74ef81"
+
+[weights]
+format = "fp8_e4m3"
+block_size = [128, 128]
+activation_scheme = "dynamic"
+prefill = "w8a8"
+decode = "w8a16"
+# Honor the checkpoint's exclusions; do not quantize every tensor blindly.
+respect_checkpoint_exclusions = true
+
+[kv_cache]
+storage = "fp8_e4m3"
+# Separate, fixed K/V factors per full-attention layer; initial profile in results/kv-scales.json.
+scale_dtype = "fp32"
+scale_granularity = "per_layer_k_v"
+reference_storage = "bf16"
+
+[state]
+conv_storage = "bf16"
+ssm_storage = "bf16"
+ssm_accumulation = "fp32"
+reference_ssm_storage = "fp32"
+
+[compute]
+residual = "bf16"
+normalization_accumulation = "fp32"
+softmax_accumulation = "fp32"

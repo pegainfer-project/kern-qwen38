@@ -1,0 +1,116 @@
+{
+  "source/gemma_rms_norm.cu": {
+    "repository": "https://github.com/pegainfer-project/kern",
+    "revision": "b118a55c55f236a37046f54f066ecb8e6c12caff",
+    "path": "tools/kernels-src/gemma_rms_norm.cu",
+    "original_sha256": "ca8758f7191d646803ef8aefb5f7715978f549111f11dba840cf944fd37fca65"
+  },
+  "source/weight_prep.cu": {
+    "repository": "https://github.com/pegainfer-project/kern",
+    "revision": "b118a55c55f236a37046f54f066ecb8e6c12caff",
+    "path": "tools/kernels-src/weight_prep.cu",
+    "original_sha256": "e609032ebe3cf8db791d6616add229ad25ed31313d0572e90a3ad0eacbf815f5"
+  },
+  "source/attn_prep.cu": {
+    "repository": "https://github.com/pegainfer-project/kern",
+    "revision": "b118a55c55f236a37046f54f066ecb8e6c12caff",
+    "path": "tools/kernels-src/attn_prep.cu",
+    "original_sha256": "4daba97c658348a68be25f647cc330114d612cb08cbed3f6cf55f6f8723c936a"
+  },
+  "source/gdn_decode.cu": {
+    "repository": "https://github.com/pegainfer-project/kern",
+    "revision": "b118a55c55f236a37046f54f066ecb8e6c12caff",
+    "path": "tools/kernels-src/gdn_decode.cu",
+    "original_sha256": "93c47272cde5450806d2a3c71d28247481095e52d1bf17c6c4fb31120bf0d6c3"
+  },
+  "source/sigmoid_mul.cu": {
+    "repository": "https://github.com/pegainfer-project/kern",
+    "revision": "b118a55c55f236a37046f54f066ecb8e6c12caff",
+    "path": "tools/kernels-src/sigmoid_mul.cu",
+    "original_sha256": "b27ad8b140944786815cae25c9aa5a0f4a63975b7d007d4949cb5f51acc1558e"
+  },
+  "source/silu_mul.cu": {
+    "repository": "https://github.com/pegainfer-project/kern",
+    "revision": "b118a55c55f236a37046f54f066ecb8e6c12caff",
+    "path": "tools/kernels-src/silu_mul.cu",
+    "original_sha256": "298fd032f215f4cf53b7bdc141fdaf00c882c7482c0098cd621a5c72be5a0b66"
+  },
+  "source/argmax.cu": {
+    "repository": "https://github.com/pegainfer-project/kern",
+    "revision": "b118a55c55f236a37046f54f066ecb8e6c12caff",
+    "path": "tools/kernels-src/argmax.cu",
+    "original_sha256": "69094c2da4d965c8f452c29a745d7b13d48115a02854b15dc4e69b5699b9a5c2"
+  },
+  "source/copy_rows.cu": {
+    "repository": "https://github.com/pegainfer-project/kern",
+    "revision": "b118a55c55f236a37046f54f066ecb8e6c12caff",
+    "path": "tools/kernels-src/copy_rows.cu",
+    "original_sha256": "7fe6564f79c9fa5779f45072c28aa380b4195d40ae2f52e7c92211fe276e9306"
+  },
+  "source/line_copy.cu": {
+    "repository": "https://github.com/pegainfer-project/kern",
+    "revision": "b118a55c55f236a37046f54f066ecb8e6c12caff",
+    "path": "tools/kernels-src/line_copy.cu",
+    "original_sha256": "f22c48250fa1ab0f13bc0ff483868dd6f82e7613f8f048e0c5ce72aab0e023f4"
+  },
+  "source/embedding.cu": {
+    "repository": "https://github.com/pegainfer-project/kern-qwen3",
+    "revision": "ca9199117bec3c85d13b3ed5869243af23e2f80a",
+    "path": "source/qwen3.cu",
+    "adaptation": "embedding entry only"
+  },
+  "source/attention.cu": {
+    "repository": "https://github.com/pegainfer-project/kern-qwen3",
+    "revision": "ca9199117bec3c85d13b3ed5869243af23e2f80a",
+    "path": "source/attention.cu",
+    "original_sha256": "d54704c8acae94136250292e13f1bf2fb0c4bbd218bc06918923ea08edb43365"
+  },
+  "source/attention.cuh": {
+    "repository": "https://github.com/pegainfer-project/kern-qwen3",
+    "revision": "ca9199117bec3c85d13b3ed5869243af23e2f80a",
+    "path": "source/attention.cuh",
+    "original_sha256": "bd4cb41c62f1bfb580fed164058aa5a307e98ce15cad1e674c4b12c8827734c7"
+  },
+  "source/attention_metadata.cu": {
+    "repository": "https://github.com/pegainfer-project/kern-qwen3",
+    "revision": "ca9199117bec3c85d13b3ed5869243af23e2f80a",
+    "path": "source/attention_metadata.cu",
+    "original_sha256": "452a76b5a9bcdb5cfe625ab89eaf5a2bf372c5122edf04020fa7c2dc2e917a71"
+  },
+  "source/attention_plan.cu": {
+    "repository": "https://github.com/pegainfer-project/kern-qwen3",
+    "revision": "ca9199117bec3c85d13b3ed5869243af23e2f80a",
+    "path": "source/attention_plan.cu",
+    "original_sha256": "f2d7cb4b799b55839ca619cd3df7b981277d524ae04d67e8fe9d27bdc7b29b12"
+  },
+  "source/sampling.cu": {
+    "repository": "https://github.com/pegainfer-project/kern-qwen3",
+    "revision": "ca9199117bec3c85d13b3ed5869243af23e2f80a",
+    "path": "source/sampling.cu",
+    "original_sha256": "b035c0d28b744291d751f604649ce06440d9d6eb0fddcd1966cd95460d21be39"
+  },
+  "source/sampling_metadata.cu": {
+    "repository": "https://github.com/pegainfer-project/kern-qwen3",
+    "revision": "ca9199117bec3c85d13b3ed5869243af23e2f80a",
+    "path": "source/sampling_metadata.cu",
+    "original_sha256": "73a6f80c0d0e9b8be5b8af2069aabe3e306f06c0b2ec6194d4a34aca6ef5d46b"
+  },
+  "source/sample_glue.cu": {
+    "repository": "https://github.com/pegainfer-project/kern-qwen3",
+    "revision": "ca9199117bec3c85d13b3ed5869243af23e2f80a",
+    "path": "source/sample_glue.cu",
+    "original_sha256": "aea05bfebb9d432163dab6d99dea8b0e3b52241e5c411c827d2dd748c6273b0a"
+  },
+  "source/fp8_gemv.cu": {
+    "repository": "https://github.com/pegainfer-project/pegainfer",
+    "revision": "dc78afb0873f53606ad494d5a899f0fdbf0687df",
+    "path": "pegainfer-kernels/csrc/shared/gemv.cu",
+    "adaptation": "streaming warp-per-row algorithm adapted to E4M3 weights and BF16 block128 scales; raw CUDA entry, batched input"
+  },
+  "source/gdn_prefill.py": {
+    "repository": "https://github.com/pegainfer-project/pegainfer",
+    "revision": "dc78afb0873f53606ad494d5a899f0fdbf0687df",
+    "path": "pegainfer-kernels/tools/triton/gated_delta_rule_chunkwise_kernels.py",
+    "adaptation": "local AOT compilation; interleaved BA stride; decode-compatible normalization epsilon and BF16 beta rounding; original FLA attribution preserved"
+  }
+}

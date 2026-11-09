@@ -1,0 +1,22 @@
+kern-qwen38
+
+CUDA operators and FlashInfer adapters are adapted from the Apache-2.0 projects
+kern (b118a55c55f236a37046f54f066ecb8e6c12caff), kern-qwen3
+(ca9199117bec3c85d13b3ed5869243af23e2f80a), and pegainfer
+(dc78afb0873f53606ad494d5a899f0fdbf0687df).
+See upstreams.json for per-file origins and original hashes.
+
+FlashInfer is an unmodified git submodule pinned to
+023a8474e1f7469572c0d4284535fc6ffa699574 (main HEAD at import time).
+Its headers are instantiated through local CUDA adapters.
+See third_party/flashinfer/LICENSE and its upstream copyright notices.
+
+Local adaptations add BF16 persistent GDN state with FP32 register updates,
+FP8 cache writes with explicit scales, GQA=6 attention instantiations,
+and a block-scaled FP8 weight GEMV candidate derived from pegainfer's
+streaming warp-per-row approach.
+
+source/gdn_prefill.py adapts pegainfer's Apache-2.0 chunked GDN source,
+which attributes the original algorithms to Flash Linear Attention (FLA),
+https://github.com/fla-org/flash-linear-attention. The original file-level
+attribution is preserved. Local changes handle BA strides and numerical rules.

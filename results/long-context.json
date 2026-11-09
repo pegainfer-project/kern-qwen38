@@ -1,0 +1,37 @@
+{
+  "aligned_chunks_match": true,
+  "cases": [
+    {
+      "prompt_tokens": 16384,
+      "chunk": 1024,
+      "generated_ids": [
+        25358,
+        13,
+        271,
+        760,
+        1879,
+        1414,
+        16661,
+        314
+      ],
+      "text": " Tokyo.\n\nThe input text consists of",
+      "prefill": "prefill: 16384 tokens in 16 chunk(s) of <= 1024 (35.263598742s, 465 tok/s, emits the first token)"
+    },
+    {
+      "prompt_tokens": 16384,
+      "chunk": 512,
+      "generated_ids": [
+        25358,
+        13,
+        271,
+        760,
+        1879,
+        1414,
+        16661,
+        314
+      ],
+      "text": " Tokyo.\n\nThe input text consists of",
+      "prefill": "prefill: 16384 tokens in 32 chunk(s) of <= 512 (37.064373373s, 442 tok/s, emits the first token)"
+    }
+  ]
+}

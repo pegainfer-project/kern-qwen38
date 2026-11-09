@@ -1,0 +1,119 @@
+{
+  "device": "NVIDIA RTX PRO 5000 72GB Blackwell",
+  "max_batch": 128,
+  "max_context": 262144,
+  "kv_pages_shuffled": true,
+  "max_context_boundary": false,
+  "boundary_lengths": null,
+  "boundary_prior_state": null,
+  "states_restored_before_singletons": true,
+  "kl_limit": 0.02,
+  "cases": [
+    {
+      "batch": 1,
+      "step": 0,
+      "mean_kl": 0.0,
+      "max_kl": 0.0,
+      "top1_matches": 1,
+      "mismatch_margins": []
+    },
+    {
+      "batch": 1,
+      "step": 1,
+      "mean_kl": 0.0,
+      "max_kl": 0.0,
+      "top1_matches": 1,
+      "mismatch_margins": []
+    },
+    {
+      "batch": 3,
+      "step": 0,
+      "mean_kl": 0.00023232607054524124,
+      "max_kl": 0.00030266144312918186,
+      "top1_matches": 3,
+      "mismatch_margins": []
+    },
+    {
+      "batch": 3,
+      "step": 1,
+      "mean_kl": 0.00021225008822511882,
+      "max_kl": 0.00037653103936463594,
+      "top1_matches": 3,
+      "mismatch_margins": []
+    },
+    {
+      "batch": 8,
+      "step": 0,
+      "mean_kl": 0.0002674151910468936,
+      "max_kl": 0.0006963133346289396,
+      "top1_matches": 8,
+      "mismatch_margins": []
+    },
+    {
+      "batch": 8,
+      "step": 1,
+      "mean_kl": 0.000328470574459061,
+      "max_kl": 0.0016198849771171808,
+      "top1_matches": 8,
+      "mismatch_margins": []
+    },
+    {
+      "batch": 9,
+      "step": 0,
+      "mean_kl": 0.00035630306228995323,
+      "max_kl": 0.0007357443682849407,
+      "top1_matches": 9,
+      "mismatch_margins": []
+    },
+    {
+      "batch": 9,
+      "step": 1,
+      "mean_kl": 0.00023669459915254265,
+      "max_kl": 0.00050389114767313,
+      "top1_matches": 9,
+      "mismatch_margins": []
+    },
+    {
+      "batch": 17,
+      "step": 0,
+      "mean_kl": 0.0002548028714954853,
+      "max_kl": 0.0005470830947160721,
+      "top1_matches": 16,
+      "mismatch_margins": [
+        0.0
+      ]
+    },
+    {
+      "batch": 17,
+      "step": 1,
+      "mean_kl": 0.0002943612926173955,
+      "max_kl": 0.0015760271344333887,
+      "top1_matches": 17,
+      "mismatch_margins": []
+    },
+    {
+      "batch": 128,
+      "step": 0,
+      "mean_kl": 0.00020624967874027789,
+      "max_kl": 0.002778403926640749,
+      "top1_matches": 124,
+      "mismatch_margins": [
+        0.0,
+        0.03125,
+        0.0,
+        0.03125
+      ]
+    },
+    {
+      "batch": 128,
+      "step": 1,
+      "mean_kl": 0.0003040586307179183,
+      "max_kl": 0.004902157932519913,
+      "top1_matches": 126,
+      "mismatch_margins": [
+        0.0,
+        0.0625
+      ]
+    }
+  ]
+}
