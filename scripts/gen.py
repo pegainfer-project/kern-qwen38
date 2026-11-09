@@ -2,7 +2,6 @@
 """Generate a batched Qwen3.8 FP8 bundle, with chunked GDN prefill and recurrent decode."""
 
 import argparse
-import copy
 import hashlib
 import json
 import math
@@ -12,7 +11,7 @@ import subprocess
 from pathlib import Path
 
 import sampling
-from gemm_manifest import linear
+from gemm_manifest import linear, prefill_linear
 
 ROOT = Path(__file__).resolve().parents[1]
 H, F, VOCAB, PAGE = 5120, 17408, 248320, 64
@@ -64,7 +63,8 @@ def generate(
     dsl_build = json.loads((kernels / "dsl.json").read_text())
     dsl = dsl_build["modules"]
     tuning = dsl_build["gemm_tuning"]
-    if not tuning:
+    prefill_tuning = dsl_build.get("prefill_gemm_tuning")
+    if not tuning or not prefill_tuning:
         raise ValueError("Build with --gemm-tuning <profile> before generating the model")
     if build["architecture"] != "sm_120":
         raise ValueError("SM120 build required")
@@ -260,17 +260,6 @@ def generate(
         ["out buffer<bf16>", "in buffer<bf16>", "in buffer<bf16>", "i32"],
         [ceil({"mul": ["tokens", H]}, 256), 1, 1],
     )
-    # Each projection gets its own row grid; GEMM uses a single shared AOT specialization.
-    meta = dsl["fp8_block_gemm"]
-    op(
-        "gemm_fp8",
-        "fp8_block_gemm",
-        meta["entry"],
-        ["in buffer<bf16>", "in buffer<fp8e4m3>", "in buffer<bf16>", "out buffer<bf16>", "i32", "i32", "i32"],
-        [ceil("tokens", 32), 1, 1],
-        block=meta["block"],
-        shared=meta["shared_mem"],
-    )
     ops["gemm_bf16"] = {
         "params": ["in buffer<bf16>", "in buffer<bf16>", "out buffer<bf16>", "i32", "i32", "i32"],
         "impl": {"launches": [{"entry": "extern:cublaslt_bf16_tn"}]},
@@ -302,17 +291,13 @@ def generate(
         w = weight(wname, [n, k], [t + ".weight" for t in tensors], dtype="fp8e4m3" if fp8 else "bf16")
         if fp8:
             scale = weight(label + ".scale", [n // 128, k // 128], [t + ".weight_scale_inv" for t in tensors])
-            opname = f"linear_{n}_{k}" if mode == "decode" else f"gemm_{n}"
+            opname = f"linear_{n}_{k}" if mode == "decode" else f"gemm_{n}_{k}"
             if opname not in ops:
                 if mode == "decode":
                     ops[opname] = linear(n, k, 1, tuning, dsl, module)
                 else:
-                    ops[opname] = copy.deepcopy(ops["gemm_fp8"])
-                    ops[opname]["impl"]["launches"][0]["grid"] = [ceil("tokens", 32), ceil(n, 64), 1]
-            if mode == "decode":
-                call(mode, label, opname, b(src), w, scale, b(dst), T, i(n), i(k))
-            else:
-                call(mode, label, opname, b(src), w, scale, b(dst), T, i(n), i(k))
+                    ops[opname] = prefill_linear(n, k, prefill_tuning, dsl, module)
+            call(mode, label, opname, b(src), w, scale, b(dst), T, i(n), i(k))
 
         else:
             call(mode, label, "gemm_bf16", b(src), w, b(dst), S if n == VOCAB else T, i(n), i(k))
@@ -840,8 +825,6 @@ def generate(
         )
         projection(mode, "lm_head", "last", "logits", VOCAB, H, ["lm_head"])
         call(mode, "sample", "sample", *sampling.args(seq_lens="lengths"))
-    # Remove unselected generic templates so verification checks the actual operators only.
-    ops.pop("gemm_fp8")
     for operator in ops.values():
         for launch in operator["impl"]["launches"]:
             if launch.get("module") in dsl:

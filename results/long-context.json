@@ -15,7 +15,7 @@
         314
       ],
       "text": " Tokyo.\n\nThe input text consists of",
-      "prefill": "prefill: 16384 tokens in 16 chunk(s) of <= 1024 (35.263598742s, 465 tok/s, emits the first token)"
+      "prefill": "prefill: 16384 tokens in 16 chunk(s) of <= 1024 (3.808120014s, 4302 tok/s, emits the first token)"
     },
     {
       "prompt_tokens": 16384,
@@ -31,7 +31,7 @@
         314
       ],
       "text": " Tokyo.\n\nThe input text consists of",
-      "prefill": "prefill: 16384 tokens in 32 chunk(s) of <= 512 (37.064373373s, 442 tok/s, emits the first token)"
+      "prefill": "prefill: 16384 tokens in 32 chunk(s) of <= 512 (4.138173901s, 3959 tok/s, emits the first token)"
     }
   ]
 }

@@ -25,8 +25,6 @@ def check(kern, bundle, reference, out):
             ",".join(map(str, item["prompt_ids"])),
             "--probe-dir",
             str(probe),
-            "--probe-labels",
-            "lm_head",
             "--probe-steps",
             "7",
         ]
@@ -37,9 +35,10 @@ def check(kern, bundle, reference, out):
         if completed.returncode:
             raise RuntimeError(completed.stdout[-4000:])
         logits = torch.frombuffer(
-            bytearray((probe / "chunk.lm_head.bin").read_bytes()), dtype=torch.bfloat16
+            bytearray((probe / "chunk.logits.bin").read_bytes()), dtype=torch.bfloat16
         ).float()
         expected = torch.load(reference / f"logits-{index}.pt", weights_only=True)
+        logits = logits[: expected.numel()]
         if logits.shape != expected.shape or not logits.isfinite().all():
             raise ValueError("invalid native logits")
         kl = float((expected.softmax(-1) * (expected.log_softmax(-1) - logits.log_softmax(-1))).sum())

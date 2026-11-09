@@ -79,7 +79,9 @@ This verifies last-position indexing; it does not establish full-context quality
 
 `long-context.json` runs a real 16384-token prompt. Prefill chunks 1024 and 512
 produce identical eight-token continuations after fixing BF16 state writeback
-to internal 64-token boundaries. Prefill measured 465 and 442 tokens/s.
+to internal 64-token boundaries. With separated per-128 activation quantization
+and autotuned W8A8 Triton AOT GEMM (`fp8_act_quant` + `fp8_w8a8_*`), 16384-token
+prefill measured 4302 and 3959 tokens/s (up from 465 and 442 tokens/s).
 This checks aligned chunk continuity on one prompt, not broad long-context quality.
 
 

@@ -86,9 +86,10 @@ GEMM interface at every batch size. Activations and decoded weight tiles remain
 BF16; weights stay FP8 in device memory. `source/fp8_gemv.cu` is a standalone
 historical candidate and is not selected by either model manifest.
 
-Prefill uses the local `fp8_block_gemm` Triton AOT kernel: 32x64x128 tiles,
-native E4M3 dot products and per-row/per-128 activation scales applied alongside
-checkpoint weight scales. BF16 exclusions use the runtime cuBLASLt extern.
+Prefill uses `fp8_act_quant` followed by autotuned `fp8_w8a8_*` Triton AOT kernels:
+per-row/per-128 activation quantization into private op scratch, followed by
+native E4M3 dot products with activation scales applied alongside checkpoint
+weight scales. BF16 exclusions use the runtime cuBLASLt extern.
 Weights remain quantized on device; there is no full weight expansion at load.
 The FlashInfer SM120 CUTLASS groupwise GEMM remains a performance candidate.
 kern's per-tensor FP8 extern cannot consume these block128 scales unchanged.

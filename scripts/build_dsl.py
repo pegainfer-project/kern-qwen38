@@ -28,6 +28,7 @@ def build(dspine=False, gemm_tuning=None):
     gemm = load("fp8_gemm")
     specs = [
         ("fp8_block_gemm", gemm.fp8_block_gemm, "*bf16,*fp8e4nv,*bf16,*bf16,i32,i32,i32,32,64,128,1", 4),
+        ("fp8_act_quant", gemm.fp8_act_quant, "*bf16,*fp8e4nv,*fp32,i32,i32,16", 4),
         (
             "gdn_prepare",
             gdn.gdr_prepare_qkv_gbeta_qwen35_kernel,
@@ -66,6 +67,7 @@ def build(dspine=False, gemm_tuning=None):
 
         specs += specifications(load)
     selected = {}
+    prefill_selected = {}
     if gemm_tuning is not None:
         profile = json.loads(gemm_tuning.read_text())
         if profile["triton"] != triton.__version__:
@@ -88,6 +90,23 @@ def build(dspine=False, gemm_tuning=None):
                 "bm": bm,
                 "bn": bn,
             }
+        for case in profile.get("prefill_cases", []):
+            config = tuple(case[k] for k in ("bm", "bn", "bk", "warps", "stages"))
+            bm, bn, bk, warps, stages = config
+            name = f"fp8_w8a8_{bm}_{bn}_{bk}_{warps}_{stages}"
+            variants[name] = (
+                name,
+                gemm.fp8_w8a8_gemm,
+                f"*fp8e4nv,*fp32,*fp8e4nv,*bf16,*bf16,i32,i32,i32,{bm},{bn},{bk}",
+                warps,
+                {},
+                {"num_stages": stages},
+            )
+            prefill_selected[f"{case['m']},{case['n']},{case['k']}"] = {
+                "module": name,
+                "bm": bm,
+                "bn": bn,
+            }
         specs += list(variants.values())
     records = {}
     for item in specs:
@@ -104,9 +123,13 @@ def build(dspine=False, gemm_tuning=None):
         if len(item) >= 6:
             options.update(item[5])
         attrs = {}
-        if name.startswith("fp8_linear"):
+        if name.startswith("fp8_linear") or name == "fp8_block_gemm":
             # Match JIT: pointers and checkpoint N/K align; live decode M may be 1..16.
             attrs = {(j,): [["tt.divisibility", 16]] for j in (0, 1, 2, 3, 5, 6)}
+        elif name == "fp8_act_quant":
+            attrs = {(j,): [["tt.divisibility", 16]] for j in (0, 1, 2, 4)}
+        elif name.startswith("fp8_w8a8_"):
+            attrs = {(j,): [["tt.divisibility", 16]] for j in (0, 1, 2, 3, 4, 6, 7)}
         compiled = triton.compile(
             ASTSource(kernel, signature=sig, constexprs=constants, attrs=attrs),
             target=GPUTarget("cuda", 120, 32),
@@ -133,7 +156,15 @@ def build(dspine=False, gemm_tuning=None):
         }
         print("Built", name, "shared", compiled.metadata.shared, flush=True)
     (out / "dsl.json").write_text(
-        json.dumps({"triton": triton.__version__, "modules": records, "gemm_tuning": selected}, indent=2)
+        json.dumps(
+            {
+                "triton": triton.__version__,
+                "modules": records,
+                "gemm_tuning": selected,
+                "prefill_gemm_tuning": prefill_selected,
+            },
+            indent=2,
+        )
         + "\n"
     )
 
