@@ -35,6 +35,8 @@ def check(bundle, checkpoint, out, boundary=False):
     rt.bind_host({"kv": host_region(kv), "gdn": host_region(state)})
     rt.run("load", {})
     buffers = {name: region(rt, m, name) for name, value in m["buffers"].items() if value["kind"] != "weight"}
+    for name, value in (("temperature", 0), ("top_k", 0), ("top_p", 1), ("min_p", 0), ("seed", 0)):
+        buffers[name].fill_(value)
     physical = (torch.randperm(count - 1, device="cuda") + 1).to(torch.int32).view(maximum, pages_per_seq)
     lengths = [2 + j % 69 for j in range(maximum)]
 

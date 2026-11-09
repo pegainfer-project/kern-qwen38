@@ -16,7 +16,7 @@ and Triton AOT metadata record the compiler versions and cubin identities.
 | `gemma_rms_norm`, `weight_prep` | kern norms and derived weight tables | Whole-model E2E |
 | `sigmoid_mul`, `silu_mul` | kern vectorized gated outputs and MLP activation | Whole-model E2E |
 | `argmax` | Two-stage greedy in one op with private scratch | Whole-model E2E |
-| `sampling`, `sample_glue` | FlashInfer stochastic sampling adapters | Compilation only; not selected by model generator |
+| `sampling`, `sample_glue` | FlashInfer stochastic sampling adapters | Temperature, top-k, top-p, min-p and seeded target sampling |
 | `model_glue`, `gdn_*` AOT stages | Parallel causal conv, state transpose, FLA chunked recurrence and gated norm | Whole-model E2E and chunk continuity |
 | `fp8_block_gemm` | Local native FP8 Tensor Core prefill GEMM | Whole-model E2E |
 | `attention_plan`, `copy_rows`, `line_copy` | kern-qwen3 page planning and kern state/row movement | Compilation only |

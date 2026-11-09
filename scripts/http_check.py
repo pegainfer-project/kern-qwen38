@@ -5,7 +5,6 @@ import argparse
 import json
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 
@@ -55,12 +54,40 @@ def check(base, out, concurrency):
         text = json.load(response)["choices"][0]["message"]["content"]
     if text != "hello":
         raise AssertionError(f"chat response differs: {text!r}")
-    try:
-        with urlopen(request("/v1/completions", body | {"temperature": 0.8}), timeout=10):
-            raise AssertionError("the greedy manifest accepted stochastic sampling")
-    except HTTPError as error:
-        if error.code != 400:
-            raise
+
+    def sample(seed, temperature=0.8):
+        payload = body | {
+            "prompt": (
+                "The capital of France is"
+                if temperature == 0
+                else "Invent a short name for a friendly robot:"
+            ),
+            "max_tokens": 8 if temperature == 0 else 32,
+            "temperature": temperature,
+            "top_k": 20,
+            "top_p": 0.9,
+            "min_p": 0.05,
+            "seed": seed,
+        }
+        with urlopen(request("/v1/completions", payload), timeout=180) as response:
+            result = json.load(response)
+        if result["usage"]["completion_tokens"] <= 0:
+            raise AssertionError("sampling returned no tokens")
+        return result["choices"][0]["text"]
+
+    sampled = sample(123)
+    if sample(123) != sampled:
+        raise AssertionError("same seed did not replay at singleton batch layout")
+    if sample(124) == sampled:
+        raise AssertionError("different seeds produced the same test continuation")
+    with ThreadPoolExecutor(max_workers=concurrency) as pool:
+        mixed = list(pool.map(lambda j: sample(j, 0 if j % 2 == 0 else 0.8), range(concurrency)))
+    if mixed[::2] != [first] * len(mixed[::2]):
+        raise AssertionError("mixed-batch greedy continuations differ")
+    sampled_stream = body | {"temperature": 0.8, "seed": 123, "stream": True}
+    with urlopen(request("/v1/completions", sampled_stream), timeout=180) as response:
+        if not any(line.strip() == b"data: [DONE]" for line in response):
+            raise AssertionError("sampled SSE did not finish")
     report = {
         "model": model,
         "completion_matches_cli": True,
@@ -68,7 +95,10 @@ def check(base, out, concurrency):
         "concurrent_requests": concurrency,
         "sse_matches": True,
         "chat_response": text,
-        "unsupported_sampling_status": 400,
+        "same_seed_equal": True,
+        "different_seed_changed": True,
+        "mixed_sampling_requests": len(mixed),
+        "sampled_sse": True,
     }
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2) + "\n")

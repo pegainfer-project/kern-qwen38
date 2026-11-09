@@ -4,6 +4,7 @@
 import argparse
 import hashlib
 import json
+import re
 import shutil
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
@@ -106,13 +107,42 @@ def build(nvcc, jobs):
         ],
         check=True,
     )
+    usage = subprocess.check_output(
+        [str(Path(nvcc).resolve().with_name("cuobjdump")), "-res-usage", str(out / "sampling.cubin")],
+        text=True,
+    )
+    entries = {}
+    for entry, resources in re.findall(r"Function ([^:]+):\s*([^\n]+)", usage):
+        tag = next(
+            (
+                name
+                for name in (
+                    "OnlineSoftmaxFusedKernel",
+                    "RadixTopKRenormProbKernel_MultiCTA",
+                    "TopPRenormProbKernel",
+                    "MinPSamplingFromProbKernel",
+                )
+                if name in entry
+            ),
+            None,
+        )
+        if tag:
+            if tag in entries:
+                raise ValueError(f"ambiguous sampling entry {tag}")
+            entries[tag] = {"entry": entry, "static_shared": int(re.search(r"SHARED:(\d+)", resources)[1])}
+    if len(entries) != 4:
+        raise ValueError(f"expected four sampling entries, got {entries}")
     report = {
         "architecture": "sm_120",
         "flashinfer_revision": revision,
         "compiler": subprocess.check_output([nvcc, "--version"], text=True),
         "modules": built,
         "attention": metadata,
-        "sampling": json.loads(subprocess.check_output([str(probe)], text=True)),
+        "sampling": {
+            "sizes": json.loads(subprocess.check_output([str(probe)], text=True)),
+            "entries": entries,
+            "revision": revision,
+        },
     }
     (out / "build.json").write_text(json.dumps(report, indent=2) + "\n")
 

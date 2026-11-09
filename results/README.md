@@ -61,8 +61,8 @@ substantial optimization headroom. Long-context quality and speculative executio
 
 The native kern-serve binary passed `/v1/models`, completions, chat completions
 (with thinking disabled), SSE equivalence and 16 concurrent requests at
-`--max-seqs 16` with automatic shared-pool capacity. Greedy completion matches the CLI output. Unsupported stochastic
-sampling returns HTTP 400. See `http.json`; run `uv run scripts/http_check.py`
+`--max-seqs 16` with automatic shared-pool capacity. Greedy completion matches the CLI output. This historical run used greedy-only sampling. Current sampling validation is
+recorded in [sampling.md](sampling.md). See `http.json`; run `uv run scripts/http_check.py`
 against the local server to repeat the gate.
 
 

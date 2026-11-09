@@ -11,6 +11,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
+import sampling
 from gemm_manifest import linear
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -73,7 +74,7 @@ def generate(
     kv_bytes = 1 if kv_dtype == "fp8" else 2
     layer_elements = 2 * 4 * PAGE * 256
     page_elements = 16 * layer_elements
-    buffers, ops, modules, load = {}, {}, {}, []
+    buffers, ops, modules, load = sampling.fills(), {}, {}, []
     dynamic = {}
     calls = {"prefill": [], "decode": []}
 
@@ -290,33 +291,10 @@ def generate(
         [1, 1, 1],
         extra=[i(H), i(H), T],
     )
-    ops["sample"] = {
-        "params": ["in buffer<bf16>", "out buffer<i64>"],
-        "impl": {
-            "scratch": {
-                "max": {"dtype": "f32", "shape": ["seqs", 64]},
-                "idx": {"dtype": "i32", "shape": ["seqs", 64]},
-            },
-            "launches": [
-                {
-                    "module": module("argmax"),
-                    "entry": "kern_argmax_partial_bf16",
-                    "params": ["in buffer<bf16>", "out buffer<f32>", "out buffer<i32>", "i32"],
-                    "grid": ["seqs", 64, 1],
-                    "block": [1024, 1, 1],
-                    "args": [{"param": 0}, {"scratch": "max"}, {"scratch": "idx"}, i(VOCAB)],
-                },
-                {
-                    "module": module("argmax"),
-                    "entry": "kern_argmax_final_i64",
-                    "params": ["in buffer<f32>", "in buffer<i32>", "out buffer<i64>", "i32"],
-                    "grid": ["seqs", 1, 1],
-                    "block": [64, 1, 1],
-                    "args": [{"scratch": "max"}, {"scratch": "idx"}, {"param": 1}, i(64)],
-                },
-            ],
-        },
-    }
+    sampling_target = sampling.target(build["architecture"])
+    for name in ("sampling", "sample_glue", "argmax"):
+        module(name)
+    ops["sample"] = sampling.op(VOCAB, max_seqs, build["sampling"], sampling_target)
 
     def projection(mode, label, src, dst, n, k, tensors):
         fp8 = n not in (96, VOCAB)
@@ -861,7 +839,7 @@ def generate(
             once_norm("model.language_model.norm.weight", H),
         )
         projection(mode, "lm_head", "last", "logits", VOCAB, H, ["lm_head"])
-        call(mode, "sample", "sample", b("logits"), b("next_token"))
+        call(mode, "sample", "sample", *sampling.args(seq_lens="lengths"))
     # Remove unselected generic templates so verification checks the actual operators only.
     ops.pop("gemm_fp8")
     for operator in ops.values():

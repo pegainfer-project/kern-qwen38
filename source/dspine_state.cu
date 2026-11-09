@@ -46,3 +46,22 @@ extern "C" __global__ void spec_tap(const B* src,B* dst,int tap) {
  int row=blockIdx.x,d=blockIdx.y*blockDim.x+threadIdx.x;
  if(d<5120)dst[(long long)row*25600+tap*5120+d]=src[(long long)row*5120+d];
 }
+
+// Every verification row samples from the target distribution. Prefix matching
+// consumes only the draws before the first mismatch; no rejection correction.
+extern "C" __global__ void spec_sampling(
+    const float* temperature, const int* top_k, const float* top_p, const float* min_p,
+    const long long* seed, const int* lengths,
+    float* row_temperature, int* row_top_k, float* row_top_p, float* row_min_p,
+    long long* row_seed, int* row_lengths) {
+  int seq=blockIdx.x, j=threadIdx.x;
+  if(j>=16)return;
+  int row=seq*16+j;
+  row_temperature[row]=temperature[seq];
+  row_top_k[row]=top_k[seq];
+  row_top_p[row]=top_p[seq];
+  row_min_p[row]=min_p[seq];
+  row_seed[row]=seed[seq];
+  // The runtime seq_len includes all 16 verification inputs.
+  row_lengths[row]=lengths[seq]-15+j;
+}

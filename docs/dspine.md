@@ -27,7 +27,17 @@ history is advanced to the same boundary. Persistent target state remains
 BF16; verify arithmetic is FP32 and state rounds at the accepted boundary.
 That rounding schedule differs from ordinary one-token BF16 decode. This is
 an explicitly tested numerical policy, not a guarantee of bitwise identity
-for arbitrary prompts. Stochastic sampling is not implemented.
+for arbitrary prompts.
+
+Target verification supports temperature, top-k, top-p, min-p and seeded sampling.
+The 16 target rows independently draw tokens using their absolute sequence lengths
+as RNG offsets. Parameters are expanded from each request to its verification rows.
+The existing prefix matcher accepts draft tokens only while they equal these target
+draws, then emits the first differing target token, or the bonus draw if all 15 match.
+There is no draft-probability acceptance test or residual-distribution correction.
+The draft lookup remains greedy; accepted prefixes may shorten for sampled requests.
+FlashInfer includes the flattened row index in its RNG subsequence, so fixed seeds
+replay at fixed batch layouts, without promising identity with ordinary decoding.
 
 ## Build
 

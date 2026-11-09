@@ -1,0 +1,26 @@
+[
+  {
+    "temperature": 0,
+    "concurrency": 4,
+    "tokens": 512,
+    "seconds": 1.9385741090009105,
+    "tokens_per_second": 264.1116466080686,
+    "counters": {
+      "vllm:spec_decode_num_drafts_total": 99.0,
+      "vllm:spec_decode_num_accepted_tokens_total": 409.0
+    },
+    "mean_acceptance_length": 5.1313131313131315
+  },
+  {
+    "temperature": 0.8,
+    "concurrency": 4,
+    "tokens": 512,
+    "seconds": 2.2570778320005047,
+    "tokens_per_second": 226.84197803945537,
+    "counters": {
+      "vllm:spec_decode_num_drafts_total": 108.0,
+      "vllm:spec_decode_num_accepted_tokens_total": 407.0
+    },
+    "mean_acceptance_length": 4.768518518518519
+  }
+]

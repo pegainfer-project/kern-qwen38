@@ -4,6 +4,7 @@ import copy
 import hashlib
 import json
 
+import sampling
 from gemm_manifest import linear
 
 H, V, F, BLOCK = 5120, 248320, 17408, 16
@@ -496,8 +497,42 @@ def augment(m, kernels, draft, tables, scales):
             {"Anchor": b("d.anchor"), "Draft": b("d.draft"), "Ids": b("d.verify_ids")},
         ),
     ]
-    # A separate all-row sampler leaves the ordinary one-row programs untouched.
-    ops["verify_sample"] = json.loads(json.dumps(ops["sample"]).replace('"seqs"', '"tokens"'))
+    # Flatten per-sequence parameters onto the 16 target rows. Each row's
+    # Philox offset is its absolute next-token position, including the bonus row.
+    for name, dtype in (
+        ("temperature", "f32"),
+        ("top_k", "i32"),
+        ("top_p", "f32"),
+        ("min_p", "f32"),
+        ("seed", "i64"),
+        ("lengths", "i32"),
+    ):
+        buffer("d.sample." + name, dtype, ["tokens"])
+    native(
+        "spec_sampling",
+        "spec_sampling",
+        [
+            "in buffer<f32>",
+            "in buffer<i32>",
+            "in buffer<f32>",
+            "in buffer<f32>",
+            "in buffer<i64>",
+            "in buffer<i32>",
+            "out buffer<f32>",
+            "out buffer<i32>",
+            "out buffer<f32>",
+            "out buffer<f32>",
+            "out buffer<i64>",
+            "out buffer<i32>",
+        ],
+        ["seqs", 1, 1],
+    )
+    metadata = json.loads((kernels / "build.json").read_text())
+    ops["verify_sample"] = sampling.op(
+        V, rows, metadata["sampling"], sampling.target(metadata["architecture"])
+    )
+    ops["verify_sample"] = json.loads(json.dumps(ops["verify_sample"]).replace('"seqs"', '"tokens"'))
+    sampling_names = ("temperature", "top_k", "top_p", "min_p", "seed", "lengths")
 
     def verify_linear(n, k):
         name = f"verify_linear_{n}_{k}"
@@ -644,7 +679,15 @@ def augment(m, kernels, draft, tables, scales):
     verify += [
         norm_template,
         gemm("verify.lm_head", b("x"), lm, b("d.target_logits"), V, H),
-        call("verify_sample", b("d.target_logits"), b("verify_tokens")),
+        call("spec_sampling", *[b(n) for n in sampling_names], *[b("d.sample." + n) for n in sampling_names]),
+        call(
+            "verify_sample",
+            b("d.target_logits"),
+            b("d.sample.lengths"),
+            *[b("d.sample." + n) for n in sampling_names[:-1]],
+            b("verify_tokens"),
+            T,
+        ),
     ]
     round_calls = (
         draft_calls

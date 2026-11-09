@@ -66,8 +66,13 @@ uv run scripts/http_check.py
 ```
 
 `/v1/models`, completions, chat completions and SSE are validated. Chat supports
-`chat_template_kwargs: {"enable_thinking": false}`. This manifest is greedy:
-set `temperature: 0`; stochastic sampling is rejected with HTTP 400. Up to 16 HTTP requests run together. Omit `--capacity` to use the available
+`chat_template_kwargs: {"enable_thinking": false}`. Sampling supports `temperature`, `top_k`, `top_p`, `min_p`, and `seed`;
+`temperature: 0` selects greedy decoding. DSpine independently samples each target
+verification row and accepts the matching draft prefix, then emits the first
+mismatching target token (or the bonus token). It uses token matching without
+rejection sampling; stochastic requests can have shorter accepted prefixes.
+Seed replay is guaranteed for a fixed batch layout; the FlashInfer RNG also uses
+the row index, so changing batch composition can change sampled continuations. Up to 16 HTTP requests run together. Omit `--capacity` to use the available
 device memory for the shared KV/state pool. The 262144 limit is per request;
 16 full-length contexts do not fit simultaneously in 72GB. Requests exceeding
 the available shared pool wait for admission.

@@ -133,5 +133,17 @@
         "original_sha256": "83358f6bcd0585a469e6ae545658f10fec7e6a8b3a4622ee9dc94efa0061c596"
       }
     ]
+  },
+  "scripts/sampling.py": {
+    "repository": "https://github.com/pegainfer-project/kern-qwen3",
+    "revision": "ca9199117bec3c85d13b3ed5869243af23e2f80a",
+    "path": "scripts/sampling.py",
+    "original_sha256": "d24d102c66f25d7241ec3f324c78a1bd89b836ba08a4cdc2c84a48f7e2408cec"
+  },
+  "tests/test_sampling.py": {
+    "repository": "https://github.com/pegainfer-project/kern-qwen3",
+    "revision": "ca9199117bec3c85d13b3ed5869243af23e2f80a",
+    "path": "tests/test_sampling.py",
+    "original_sha256": "7680bc1df5e15a747454f4b3f3d113dbffbf9b466e92b79ded92c4f8e2c683a7"
   }
 }
