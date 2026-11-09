@@ -1,0 +1,185 @@
+{
+  "samples": 8,
+  "task": "lm-eval 0.4.11 GSM8K test first 8, 8-shot chat",
+  "temperature": 0,
+  "thinking": true,
+  "max_tokens": 32768,
+  "prompt_cache": "warmed; identical prompts and ordering for both arms",
+  "baseline": "autotuned Tensor Core GEMM at all batch sizes; no GEMV launches",
+  "supersedes": "The earlier comparison against the per-sequence GEMV baseline is withdrawn.",
+  "prompts_sha256": "6ba35f3571e23c1d51700c8526298ea41a7023b77178d0fa4e82bc78337e79f0",
+  "cases": [
+    {
+      "concurrency": 1,
+      "plain": {
+        "concurrency": 1,
+        "requests": 8,
+        "prompt_cache": "warmed",
+        "cached_prompt_tokens": 13696.0,
+        "seconds": 65.16153542600114,
+        "generated_tokens": 2517,
+        "end_to_end_tokens_per_second": 38.62708242745999,
+        "median_request_seconds": 5.973805478000031,
+        "strict_correct": 7.0,
+        "flexible_correct": 7.0,
+        "truncated": 0,
+        "draft_rounds": 0.0,
+        "tokens_per_round": null,
+        "trace_files": [
+          "113553.kernels.parquet",
+          "113553.steps.parquet"
+        ]
+      },
+      "dspine": {
+        "concurrency": 1,
+        "requests": 8,
+        "prompt_cache": "warmed",
+        "cached_prompt_tokens": 13696.0,
+        "seconds": 18.25285842899939,
+        "generated_tokens": 2482,
+        "end_to_end_tokens_per_second": 135.97870216627007,
+        "median_request_seconds": 1.8201485055005833,
+        "strict_correct": 8.0,
+        "flexible_correct": 8.0,
+        "truncated": 0,
+        "draft_rounds": 447.0,
+        "tokens_per_round": 5.552572706935123,
+        "trace_files": [
+          "114214.kernels.parquet",
+          "114214.steps.parquet"
+        ]
+      },
+      "throughput_ratio": 3.5202944053989134,
+      "wall_time_ratio": 3.5699359461680356
+    },
+    {
+      "concurrency": 2,
+      "plain": {
+        "concurrency": 2,
+        "requests": 8,
+        "prompt_cache": "warmed",
+        "cached_prompt_tokens": 13696.0,
+        "seconds": 38.83168918099909,
+        "generated_tokens": 2557,
+        "end_to_end_tokens_per_second": 65.84828149199281,
+        "median_request_seconds": 6.6718235324997295,
+        "strict_correct": 6.0,
+        "flexible_correct": 7.0,
+        "truncated": 0,
+        "draft_rounds": 0.0,
+        "tokens_per_round": null,
+        "trace_files": [
+          "113658.kernels.parquet",
+          "113658.steps.parquet"
+        ]
+      },
+      "dspine": {
+        "concurrency": 2,
+        "requests": 8,
+        "prompt_cache": "warmed",
+        "cached_prompt_tokens": 13696.0,
+        "seconds": 12.062550894999731,
+        "generated_tokens": 2563,
+        "end_to_end_tokens_per_second": 212.47578744413306,
+        "median_request_seconds": 2.233447687500302,
+        "strict_correct": 8.0,
+        "flexible_correct": 8.0,
+        "truncated": 0,
+        "draft_rounds": 465.0,
+        "tokens_per_round": 5.511827956989247,
+        "trace_files": [
+          "114232.kernels.parquet",
+          "114232.steps.parquet"
+        ]
+      },
+      "throughput_ratio": 3.226747648227847,
+      "wall_time_ratio": 3.219193810580806
+    },
+    {
+      "concurrency": 4,
+      "plain": {
+        "concurrency": 4,
+        "requests": 8,
+        "prompt_cache": "warmed",
+        "cached_prompt_tokens": 13696.0,
+        "seconds": 20.44338115499886,
+        "generated_tokens": 2175,
+        "end_to_end_tokens_per_second": 106.39140284620503,
+        "median_request_seconds": 6.470315992499309,
+        "strict_correct": 8.0,
+        "flexible_correct": 8.0,
+        "truncated": 0,
+        "draft_rounds": 0.0,
+        "tokens_per_round": null,
+        "trace_files": [
+          "113737.kernels.parquet",
+          "113737.steps.parquet"
+        ]
+      },
+      "dspine": {
+        "concurrency": 4,
+        "requests": 8,
+        "prompt_cache": "warmed",
+        "cached_prompt_tokens": 13696.0,
+        "seconds": 10.276067464001244,
+        "generated_tokens": 2734,
+        "end_to_end_tokens_per_second": 266.05508474692795,
+        "median_request_seconds": 3.2968539299999975,
+        "strict_correct": 8.0,
+        "flexible_correct": 8.0,
+        "truncated": 0,
+        "draft_rounds": 511.0,
+        "tokens_per_round": 5.350293542074364,
+        "trace_files": [
+          "114244.kernels.parquet",
+          "114244.steps.parquet"
+        ]
+      },
+      "throughput_ratio": 2.5007197727388375,
+      "wall_time_ratio": 1.9894167906755567
+    },
+    {
+      "concurrency": 8,
+      "plain": {
+        "concurrency": 8,
+        "requests": 8,
+        "prompt_cache": "warmed",
+        "cached_prompt_tokens": 13696.0,
+        "seconds": 26.068803434000074,
+        "generated_tokens": 2602,
+        "end_to_end_tokens_per_second": 99.81278989607777,
+        "median_request_seconds": 7.861681293499714,
+        "strict_correct": 8.0,
+        "flexible_correct": 8.0,
+        "truncated": 0,
+        "draft_rounds": 0.0,
+        "tokens_per_round": null,
+        "trace_files": [
+          "113758.kernels.parquet",
+          "113758.steps.parquet"
+        ]
+      },
+      "dspine": {
+        "concurrency": 8,
+        "requests": 8,
+        "prompt_cache": "warmed",
+        "cached_prompt_tokens": 13696.0,
+        "seconds": 8.239546161999897,
+        "generated_tokens": 2411,
+        "end_to_end_tokens_per_second": 292.6132037610678,
+        "median_request_seconds": 5.676019422000536,
+        "strict_correct": 8.0,
+        "flexible_correct": 8.0,
+        "truncated": 0,
+        "draft_rounds": 424.0,
+        "tokens_per_round": 5.686320754716981,
+        "trace_files": [
+          "114255.kernels.parquet",
+          "114255.steps.parquet"
+        ]
+      },
+      "throughput_ratio": 2.9316203270715935,
+      "wall_time_ratio": 3.1638639946247564
+    }
+  ]
+}

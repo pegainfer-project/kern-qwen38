@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Compile local Triton operators to standalone cubins for kern; no JIT at serving time."""
 
+import argparse
 import hashlib
 import importlib.util
 import json
@@ -20,13 +21,12 @@ def load(name):
     return module
 
 
-def build():
+def build(dspine=False, gemm_tuning=None):
     out = ROOT / "build/sm_120"
     out.mkdir(parents=True, exist_ok=True)
     gdn = load("gdn_prefill")
     gemm = load("fp8_gemm")
     specs = [
-        ("fp8_weight_gemm", gemm.fp8_block_gemm, "*bf16,*fp8e4nv,*bf16,*bf16,i32,i32,i32,128,64,64,0", 8),
         ("fp8_block_gemm", gemm.fp8_block_gemm, "*bf16,*fp8e4nv,*bf16,*bf16,i32,i32,i32,32,64,128,1", 4),
         (
             "gdn_prepare",
@@ -61,18 +61,56 @@ def build():
             4,
         ),
     ]
+    if dspine:
+        from dspine_build import specifications
+
+        specs += specifications(load)
+    selected = {}
+    if gemm_tuning is not None:
+        profile = json.loads(gemm_tuning.read_text())
+        if profile["triton"] != triton.__version__:
+            raise ValueError("GEMM tuning profile must match the build Triton version")
+        variants = {}
+        for case in profile["cases"]:
+            config = tuple(case[k] for k in ("bm", "bn", "bk", "warps", "stages"))
+            bm, bn, bk, warps, stages = config
+            name = f"fp8_linear_{bm}_{bn}_{bk}_{warps}_{stages}"
+            variants[name] = (
+                name,
+                gemm.fp8_block_gemm,
+                f"*bf16,*fp8e4nv,*bf16,*bf16,i32,i32,i32,{bm},{bn},{bk},0",
+                warps,
+                {},
+                {"num_stages": stages},
+            )
+            selected[f"{case['m']},{case['n']},{case['k']}"] = {
+                "module": name,
+                "bm": bm,
+                "bn": bn,
+            }
+        specs += list(variants.values())
     records = {}
-    for name, kernel, signature, warps in specs:
+    for item in specs:
+        name, kernel, signature, warps = item[:4]
         sig, constants = {}, {}
         for arg, typ in zip(kernel.arg_names, signature.split(","), strict=True):
             if typ.isdecimal():
                 constants[arg] = int(typ)
             else:
                 sig[arg] = typ
+        if len(item) >= 5:
+            constants.update(item[4])
+        options = {"num_warps": warps, "num_stages": 2, "enable_fp_fusion": not name.startswith("dspine_")}
+        if len(item) >= 6:
+            options.update(item[5])
+        attrs = {}
+        if name.startswith("fp8_linear"):
+            # Match JIT: pointers and checkpoint N/K align; live decode M may be 1..16.
+            attrs = {(j,): [["tt.divisibility", 16]] for j in (0, 1, 2, 3, 5, 6)}
         compiled = triton.compile(
-            ASTSource(kernel, signature=sig, constexprs=constants),
+            ASTSource(kernel, signature=sig, constexprs=constants, attrs=attrs),
             target=GPUTarget("cuda", 120, 32),
-            options={"num_warps": warps, "num_stages": 2},
+            options=options,
         )
         if (
             compiled.metadata.global_scratch_size
@@ -90,13 +128,19 @@ def build():
             "shared_mem": compiled.metadata.shared,
             "block": [32 * warps, 1, 1],
             "signature": list(sig.values()),
+            "arguments": list(sig),
             "abi_tail": ["i64", "i64"],
         }
         print("Built", name, "shared", compiled.metadata.shared, flush=True)
     (out / "dsl.json").write_text(
-        json.dumps({"triton": triton.__version__, "modules": records}, indent=2) + "\n"
+        json.dumps({"triton": triton.__version__, "modules": records, "gemm_tuning": selected}, indent=2)
+        + "\n"
     )
 
 
 if __name__ == "__main__":
-    build()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--dspine", action="store_true")
+    parser.add_argument("--gemm-tuning", type=Path)
+    args = parser.parse_args()
+    build(args.dspine, args.gemm_tuning)

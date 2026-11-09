@@ -4,7 +4,8 @@ Qwen3.8-27B text generation on one RTX PRO 5000 72GB Blackwell (SM120),
 with FP8 weights, calibrated FP8 KV cache and BF16 Gated DeltaNet state.
 The native kern bundle runs chunked prefill and greedy CUDA Graph decode.
 It supports up to 16 concurrent sequences and the checkpoint's 262,144-token
-context limit. MTP and DSpine are not connected.
+context limit. The optional [DSpine bundle](docs/dspine.md) adds native
+16-row speculative rounds; the target checkpoint's own MTP head is not connected.
 
 This repository contains its own sources, generator, build scripts and GPU gates.
 It does not read sibling repository directories. FlashInfer is a pinned submodule
@@ -25,7 +26,7 @@ The compiler/runtime do not require a local checkout of another model repository
 git submodule update --init
 uv sync
 uv run scripts/build.py
-uv run scripts/build_dsl.py
+uv run scripts/build_dsl.py --gemm-tuning results/gemm-tuning.json
 uv run scripts/gen.py --checkpoint /path/to/Qwen3.8-27B-FP8 \
   --kv-dtype fp8 --kv-scales results/kv-scales.json
 KERN=/path/to/kern/target/release/kern
@@ -77,8 +78,8 @@ the available shared pool wait for admission.
 - Weights: checkpoint E4M3 with BF16 block128 dequantization factors; exclusions
   such as embeddings, LM head, normalization and gate projections remain BF16.
 - Prefill projections: native FP8 Tensor Core GEMM, dynamic per-row/per-128-value
-  activation quantization. Decode keeps BF16 activations: streaming GEMV through batch 8, tiled
-  Tensor Core GEMM for larger batches. Both use BF16-decoded weight tiles.
+  activation quantization. Decode keeps BF16 activations and uses autotuned Tensor Core GEMM at
+  every batch size, with BF16-decoded weight tiles.
 - Full-attention KV: E4M3 with fixed, separate K/V scales per layer. Attention
   folds K scale into softmax scaling and applies V scale to the output.
 - GDN convolution history and persistent matrix state: BF16. Prefill chunk

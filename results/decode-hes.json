@@ -1,0 +1,22 @@
+{
+  "1": {
+    "steps": 3404,
+    "mean_ms": 25.24573290041128,
+    "decode_tokens_per_second": 39.61065436067055
+  },
+  "4": {
+    "steps": 656,
+    "mean_ms": 28.60340969207317,
+    "decode_tokens_per_second": 139.8434677215603
+  },
+  "2": {
+    "steps": 1233,
+    "mean_ms": 26.811403911597733,
+    "decode_tokens_per_second": 74.59512402238906
+  },
+  "8": {
+    "steps": 218,
+    "mean_ms": 28.43494717431193,
+    "decode_tokens_per_second": 281.34393747800533
+  }
+}

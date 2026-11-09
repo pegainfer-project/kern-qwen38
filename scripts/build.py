@@ -23,10 +23,24 @@ def build(nvcc, jobs):
     out = ROOT / "build/sm_120"
     out.mkdir(parents=True, exist_ok=True)
     include = "-I" + str(upstream / "include")
-    modules = [(name, name, []) for name in (
-        "model_glue", "fp8_gemv", "embedding", "gemma_rms_norm", "weight_prep", "sigmoid_mul", "silu_mul",
-        "argmax", "copy_rows", "line_copy", "sample_glue", "sampling", "attention_plan",
-    )]
+    modules = [
+        (name, name, [])
+        for name in (
+            "model_glue",
+            "dspine_state",
+            "embedding",
+            "gemma_rms_norm",
+            "weight_prep",
+            "sigmoid_mul",
+            "silu_mul",
+            "argmax",
+            "copy_rows",
+            "line_copy",
+            "sample_glue",
+            "sampling",
+            "attention_plan",
+        )
+    ]
     for kv, value in (("bf16", 0), ("fp8", 1)):
         modules.append((f"attn_prep_{kv}", "attn_prep", [f"-DKERN_KV_FP8={value}"]))
         modules.append((f"attention_{kv}", "attention", [f"-DKERN_KV_FP8={value}", "-DKERN_HEAD_DIM=256"]))
@@ -37,28 +51,69 @@ def build(nvcc, jobs):
         name, source, defines = item
         src = ROOT / "source" / f"{source}.cu"
         target = out / f"{name}.cubin"
-        command = [nvcc, "-std=c++17", "--expt-relaxed-constexpr", "-O3", "-lineinfo", "-cubin", "-arch=sm_120",
-                   include, *defines, str(src), "-o", str(target)]
+        command = [
+            nvcc,
+            "-std=c++17",
+            "--expt-relaxed-constexpr",
+            "-O3",
+            "-lineinfo",
+            "-cubin",
+            "-arch=sm_120",
+            include,
+            *defines,
+            str(src),
+            "-o",
+            str(target),
+        ]
         subprocess.run(command, check=True)
         print(f"Built {name}", flush=True)
-        return name, {"sha256": hashlib.sha256(target.read_bytes()).hexdigest(),
-                      "source_sha256": hashlib.sha256(src.read_bytes()).hexdigest(), "command": command}
+        return name, {
+            "sha256": hashlib.sha256(target.read_bytes()).hexdigest(),
+            "source_sha256": hashlib.sha256(src.read_bytes()).hexdigest(),
+            "command": command,
+        }
 
     with ThreadPoolExecutor(max_workers=jobs) as pool:
         built = dict(pool.map(compile_module, modules))
     metadata = {}
     for kv, value in (("bf16", 0), ("fp8", 1)):
         probe = out / f"attention_metadata_{kv}"
-        subprocess.run([nvcc, "-std=c++17", "--expt-relaxed-constexpr", include, "-DKERN_HEAD_DIM=256", f"-DKERN_KV_FP8={value}",
-                        str(ROOT / "source/attention_metadata.cu"), "-o", str(probe)], check=True)
+        subprocess.run(
+            [
+                nvcc,
+                "-std=c++17",
+                "--expt-relaxed-constexpr",
+                include,
+                "-DKERN_HEAD_DIM=256",
+                f"-DKERN_KV_FP8={value}",
+                str(ROOT / "source/attention_metadata.cu"),
+                "-o",
+                str(probe),
+            ],
+            check=True,
+        )
         metadata[kv] = json.loads(subprocess.check_output([str(probe)], text=True))
     probe = out / "sampling_metadata"
-    subprocess.run([nvcc, "-std=c++17", "--expt-relaxed-constexpr", include, str(ROOT / "source/sampling_metadata.cu"),
-                    "-o", str(probe)], check=True)
-    report = {"architecture": "sm_120", "flashinfer_revision": revision,
-              "compiler": subprocess.check_output([nvcc, "--version"], text=True),
-              "modules": built, "attention": metadata,
-              "sampling": json.loads(subprocess.check_output([str(probe)], text=True))}
+    subprocess.run(
+        [
+            nvcc,
+            "-std=c++17",
+            "--expt-relaxed-constexpr",
+            include,
+            str(ROOT / "source/sampling_metadata.cu"),
+            "-o",
+            str(probe),
+        ],
+        check=True,
+    )
+    report = {
+        "architecture": "sm_120",
+        "flashinfer_revision": revision,
+        "compiler": subprocess.check_output([nvcc, "--version"], text=True),
+        "modules": built,
+        "attention": metadata,
+        "sampling": json.loads(subprocess.check_output([str(probe)], text=True)),
+    }
     (out / "build.json").write_text(json.dumps(report, indent=2) + "\n")
 
 

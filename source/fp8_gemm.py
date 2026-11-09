@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Native FP8 Tensor Core prefill GEMM with checkpoint block128 scales."""
+"""Tiled FP8-weight GEMM with checkpoint block128 scales."""
 
 import triton
 import triton.language as tl
 
 
-@triton.jit
+@triton.jit(do_not_specialize=["M"])
 def fp8_block_gemm(
     A, W, S, C, M, N, K, BM: tl.constexpr, BN: tl.constexpr, BK: tl.constexpr, A8: tl.constexpr
 ):
@@ -25,5 +25,5 @@ def fp8_block_gemm(
         else:
             # Decode keeps BF16 activations; expand only the current weight tile.
             wb = (w.to(tl.float32) * sw[None, :]).to(tl.bfloat16)
-            acc += tl.dot(a.to(tl.bfloat16), wb)
+            acc = tl.dot(a.to(tl.bfloat16), wb, acc)
     tl.store(C + m[:, None] * N + n[None, :], acc.to(tl.bfloat16), (m[:, None] < M) & (n[None, :] < N))

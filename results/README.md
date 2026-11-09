@@ -68,10 +68,10 @@ against the local server to repeat the gate.
 
 ## Batch and context validation
 
-`batch.json` compares batch 1, 3, 8, 9 and 16 against singleton execution
+`batch.json` compares batch 1, 2, 3, 4, 8, 9 and 16 against singleton execution
 for two consecutive steps, restoring identical KV/recurrent state before each
-comparison. Physical KV pages are shuffled. Maximum logits KL is 0.001645;
-all tested top-1 predictions agree. Batched and singleton results are not bitwise identical.
+comparison. Physical KV pages are shuffled. Maximum logits KL is below 0.002;
+the few top-1 differences have singleton margins of at most 0.0625. Batched and singleton results are not bitwise identical.
 
 `context-boundary.json` checks lengths 262144, 65536 and 4096 using explicitly
 zero prior KV/state and shared read-only zero pages. Maximum KL is 0.013991.
@@ -81,3 +81,65 @@ This verifies last-position indexing; it does not establish full-context quality
 produce identical eight-token continuations after fixing BF16 state writeback
 to internal 64-token boundaries. Prefill measured 465 and 442 tokens/s.
 This checks aligned chunk continuity on one prompt, not broad long-context quality.
+
+
+## Native DSpine and autotuned verification
+
+The DSpine round is a native CUDA Graph using a five-layer BF16 draft, the
+upstream code bridge/serial refinement, FP8-weight/BF16-activation target GEMM,
+and ReplaySSM compact verify/commit. See [build and serving](../docs/dspine.md).
+`replayssm.json` checks an independent direct FP32 recurrence, accepted prefixes
+1..16, null slots and verify preserving committed state. Maximum verify output
+error is 0.000031 and committed BF16 state error is 0.000977. A whole-model
+Compute Sanitizer smoke run reports zero memory errors.
+
+`gemm-tuning.json` records Triton autotune over 32 configurations and 45 M/N/K
+shapes on RTX PRO 5000 72GB. Selected configurations were independently checked
+against a true FP32 GEMM of BF16 activations and BF16-decoded weights. The AOT
+build carries the pointer/dimension divisibility attributes inferred by JIT.
+BF16 activations remain unchanged; no activation quantization was added.
+
+At batch 1, the FP8 projection GEMMs perform 778.5 GFLOP per 16-row verify.
+Unique weight/scale traffic is 24.33 GB: the 1344 GB/s bandwidth roofline is
+18.1 ms / 43.0 effective TFLOP/s. Initial HES timing was 107.5 ms; after tuning,
+`dspine-hes.json` reports about 22.5 ms for these GEMMs, about 80% of this ideal
+weight-read roofline. This is useful-work accounting, not DRAM counters.
+The complete round averages about 37.9 ms on the short GSM8K contexts; draft
+and state materialization take about 6.5 ms and 0.4 ms. `dspine-native.json`
+also records an identical 64-token continuation against plain decode.
+
+### Small GSM8K serving sweep
+
+The earlier comparison against per-sequence GEMV is withdrawn. Both arms now
+use autotuned Tensor Core GEMM at every batch size, retaining BF16 activations.
+`gsm8k-dspine.json` records the replacement run: lm-eval 0.4.11 first eight
+GSM8K test questions, 8-shot chat, thinking, greedy, max_tokens=32768 and
+identical warmed prompts. All phases reuse the same eight questions. Results
+are total completion tokens divided by end-to-end HTTP wall time:
+
+| Concurrency | Plain tokens/s | DSpine tokens/s | Throughput ratio | Plain strict | DSpine strict |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 | 38.6 | 136.0 | 3.52x | 7/8 | 8/8 |
+| 2 | 65.8 | 212.5 | 3.23x | 6/8 | 8/8 |
+| 4 | 106.4 | 266.1 | 2.50x | 8/8 | 8/8 |
+| 8 | 99.8 | 292.6 | 2.93x | 8/8 | 8/8 |
+
+No response was truncated. Standard flexible extraction scores are 7/8, 7/8,
+8/8 and 8/8 for plain decode, and 8/8 for every DSpine phase. The failures
+calculate the correct numeric result but omit the `####` marker; the 160-minute
+answer also ends in an hours/minutes representation, misleading the flexible
+last-number extractor. These eight questions cannot establish broad accuracy.
+
+The finite batch drains as requests finish. At concurrency 8, the plain arm's
+longest response has 923 tokens, so the tail becomes single-sequence execution.
+`decode-hes.json` separately reports ordinary GPU decode at about 39.6, 74.6,
+139.8 and 281.3 tokens/s for live batches 1, 2, 4 and 8. Mean step time is
+about 25.2-28.6 ms: weight reads are shared across rows. HTTP throughput above
+includes partial batches, prefix restoration and drain time. Responses can
+have different wording/lengths across arms; complete times and token counts
+are retained rather than assuming identical generation lengths.
+
+`flashinfer-gemm.json` separately measures the pinned FlashInfer CUTLASS W8A8
+candidate at M=16/32/64/128, N=5120, K=17408. GEMM takes about 119 us, excluding
+activation quantization. Random-data RMS error against BF16 inputs is about
+2.6%; this candidate is not enabled in the serving bundle.

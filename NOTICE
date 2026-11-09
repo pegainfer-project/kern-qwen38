@@ -20,3 +20,11 @@ source/gdn_prefill.py adapts pegainfer's Apache-2.0 chunked GDN source,
 which attributes the original algorithms to Flash Linear Attention (FLA),
 https://github.com/fla-org/flash-linear-attention. The original file-level
 attribution is preserved. Local changes handle BA strides and numerical rules.
+
+DSpine bridge and greedy refinement kernels are adapted from Tencent/DSpine
+(https://github.com/Tencent/DSpine), licensed under Apache-2.0.
+
+ReplaySSM verification is adapted from Tencent/DSpine; compact state materialization
+is adapted from SGLang v0.5.22 (https://github.com/sgl-project/sglang), Apache-2.0.
+SGLang attributes its ReplaySSM implementation to Johnny-Liou/ReplaySSM
+(commit 3c85112, vLLM reference) and the Dao AI Lab ReplaySSM algorithm.

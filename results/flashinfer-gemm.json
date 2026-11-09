@@ -1,0 +1,38 @@
+[
+  {
+    "m": 16,
+    "n": 5120,
+    "k": 17408,
+    "gemm_ms": 0.11908639907836914,
+    "effective_GBs": 748.4394581563041,
+    "effective_TFLOPs": 23.95006266100173,
+    "relative_RMS_error_vs_BF16_input": 0.02586277201771736
+  },
+  {
+    "m": 32,
+    "n": 5120,
+    "k": 17408,
+    "gemm_ms": 0.11924127578735351,
+    "effective_GBs": 747.4673464492807,
+    "effective_TFLOPs": 47.837910172753965,
+    "relative_RMS_error_vs_BF16_input": 0.025794198736548424
+  },
+  {
+    "m": 64,
+    "n": 5120,
+    "k": 17408,
+    "gemm_ms": 0.1196009635925293,
+    "effective_GBs": 745.2194139811037,
+    "effective_TFLOPs": 95.38808498958127,
+    "relative_RMS_error_vs_BF16_input": 0.025781381875276566
+  },
+  {
+    "m": 128,
+    "n": 5120,
+    "k": 17408,
+    "gemm_ms": 0.11949824333190918,
+    "effective_GBs": 745.8600019118458,
+    "effective_TFLOPs": 190.94016048943251,
+    "relative_RMS_error_vs_BF16_input": 0.025784073397517204
+  }
+]

@@ -81,10 +81,10 @@ time; the running requests join the `decode_batch` program.
 Official checkpoint weights are E4M3 `[N,K]`. Their `weight_scale_inv` tensors
 are BF16 `[ceil(N/128), ceil(K/128)]`; despite the suffix these are the factors
 used to dequantize the stored weights. Confirmed from downloaded tensor headers.
-`kern_gemv_fp8_block128` requires K divisible by 128 and aligned weights. Launch
-grid `[ceil(N/8), batch]`, block 256. It consumes BF16 activations directly.
-Weight products round to BF16 before accumulation, matching the tiled decode
-GEMM. This prevents changing batch size from changing the weight decoding rule.
+Ordinary decode and speculative verification use the same autotuned tiled
+GEMM interface at every batch size. Activations and decoded weight tiles remain
+BF16; weights stay FP8 in device memory. `source/fp8_gemv.cu` is a standalone
+historical candidate and is not selected by either model manifest.
 
 Prefill uses the local `fp8_block_gemm` Triton AOT kernel: 32x64x128 tiles,
 native E4M3 dot products and per-row/per-128 activation scales applied alongside
@@ -111,7 +111,7 @@ long-context numerical equivalence.
 
 ## Remaining work
 
-Benchmark FlashInfer GDN/GEMM candidates against the selected implementations,
-tune the batched kernels and evaluate long-context KV
-calibration and recurrent drift. The runnable bundle is text-only and greedy, with at most 16 running sequences.
-DSpine is downloaded; speculative integration awaits the user's instructions.
+Evaluate further FlashInfer GDN/GEMM candidates, long-context KV calibration
+and recurrent drift. The native bundles are text-only and greedy, with at most
+16 running sequences. The optional [DSpine bundle](dspine.md) uses ReplaySSM and
+autotuned verification; its state policy and measured scope are documented there.

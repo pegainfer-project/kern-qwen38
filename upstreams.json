@@ -112,5 +112,26 @@
     "revision": "dc78afb0873f53606ad494d5a899f0fdbf0687df",
     "path": "pegainfer-kernels/tools/triton/gated_delta_rule_chunkwise_kernels.py",
     "adaptation": "local AOT compilation; interleaved BA stride; decode-compatible normalization epsilon and BF16 beta rounding; original FLA attribution preserved"
+  },
+  "source/dspine.py": {
+    "repository": "https://github.com/Tencent/DSpine",
+    "revision": "321b0fc1388c4cdf03483ab73856975f7c0c0be7",
+    "path": "sglang_dspine/kernels/dspine.py",
+    "original_sha256": "cfecf8caf50c9f97b37772360c9bb03321172b4d99413120740505643f3186cc",
+    "adaptation": "Greedy numerical kernels only; local AOT compilation without SGLang."
+  },
+  "source/replayssm.py": {
+    "repository": "https://github.com/Tencent/DSpine",
+    "revision": "321b0fc1388c4cdf03483ab73856975f7c0c0be7",
+    "path": "sglang_dspine/runtime/replayssm/kernels.py",
+    "adaptation": "Empty-history verify plus compact commit from SGLang v0.5.22 gdn_replayssm_spec_decode.py; BF16 persistent state and FP32 verify arithmetic.",
+    "additional_sources": [
+      {
+        "repository": "https://github.com/sgl-project/sglang",
+        "revision": "v0.5.22",
+        "path": "python/sglang/kernels/ops/attention/fla/gdn_replayssm_spec_decode.py",
+        "original_sha256": "83358f6bcd0585a469e6ae545658f10fec7e6a8b3a4622ee9dc94efa0061c596"
+      }
+    ]
   }
 }

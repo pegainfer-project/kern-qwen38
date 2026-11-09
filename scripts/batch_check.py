@@ -71,7 +71,7 @@ def check(bundle, checkpoint, out, boundary=False):
     cases = []
     if boundary:
         lengths[:3] = [m["buffers"]["positions"]["domain"]["max"], 65535, 4095]
-    for groups in [3] if boundary else sorted({1, 3, 8, 9, maximum}):
+    for groups in [3] if boundary else sorted({1, 2, 3, 4, 8, 9, maximum}):
         if groups > maximum:
             continue
         for step in range(1 if boundary else 2):

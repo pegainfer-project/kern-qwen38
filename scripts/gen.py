@@ -11,6 +11,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from gemm_manifest import linear
+
 ROOT = Path(__file__).resolve().parents[1]
 H, F, VOCAB, PAGE = 5120, 17408, 248320, 64
 CONV = 3 * 10240 * 2
@@ -24,7 +26,18 @@ T = {"var": "tokens"}
 ceil = lambda value, divisor: {"ceil_div": [value, divisor]}
 
 
-def generate(checkpoint, kernels, out, context, chunk, kv_dtype, scale_file, max_seqs=16):
+def generate(
+    checkpoint,
+    kernels,
+    out,
+    context,
+    chunk,
+    kv_dtype,
+    scale_file,
+    max_seqs=16,
+    dspine=None,
+    dspine_tables=None,
+):
     config = json.loads((checkpoint / "config.json").read_text())
     text = config["text_config"]
     context = context or text["max_position_embeddings"]
@@ -34,6 +47,9 @@ def generate(checkpoint, kernels, out, context, chunk, kv_dtype, scale_file, max
         )
     if not 1 <= max_seqs <= 16:
         raise ValueError("max-seqs must be within 1..16")
+    # A counted round needs speculative headroom past the public context bound.
+    context += 15 if dspine is not None else 0
+    page_columns = (context + PAGE - 1) // PAGE
     splits = 32
     plan_slots = max_seqs * splits
     S = {"var": "seqs"}
@@ -44,7 +60,11 @@ def generate(checkpoint, kernels, out, context, chunk, kv_dtype, scale_file, max
     if quant["weight_block_size"] != [128, 128] or quant["fmt"] != "e4m3":
         raise ValueError("expected block128 E4M3 checkpoint")
     build = json.loads((kernels / "build.json").read_text())
-    dsl = json.loads((kernels / "dsl.json").read_text())["modules"]
+    dsl_build = json.loads((kernels / "dsl.json").read_text())
+    dsl = dsl_build["modules"]
+    tuning = dsl_build["gemm_tuning"]
+    if not tuning:
+        raise ValueError("Build with --gemm-tuning <profile> before generating the model")
     if build["architecture"] != "sm_120":
         raise ValueError("SM120 build required")
     scales = json.loads(scale_file.read_text()) if scale_file else None
@@ -136,7 +156,7 @@ def generate(checkpoint, kernels, out, context, chunk, kv_dtype, scale_file, max
     buffer("token_ids", "i64", ["tokens"], "input", fill="token", domain={"min": 0, "max": VOCAB - 1})
     buffer("positions", "i64", ["tokens"], "input", fill="position", domain={"min": 0, "max": context - 1})
     buffer("slots", "i64", ["tokens"], "input", fill="slot", domain={"index_into": "kv"})
-    buffer("pages", "i32", ["seqs", context // PAGE], "input", domain={"index_into": "kv", "stride": PAGE})
+    buffer("pages", "i32", ["seqs", page_columns], "input", domain={"index_into": "kv", "stride": PAGE})
     buffer("lengths", "i32", ["seqs"], "input", fill="seq_len", domain={"min": 1, "max": context})
     buffer(
         "q_indptr",
@@ -171,7 +191,7 @@ def generate(checkpoint, kernels, out, context, chunk, kv_dtype, scale_file, max
     buffer("cos", "bf16", ["tokens", 32])
     buffer("sin", "bf16", ["tokens", 32])
     for name, shape in [
-        ("indices", [max_seqs * context // PAGE]),
+        ("indices", [max_seqs * page_columns]),
         ("indptr", [max_seqs + 1]),
         ("last", [max_seqs]),
         ("request", [max(plan_slots, (chunk * 6 + 63) // 64)]),
@@ -190,7 +210,7 @@ def generate(checkpoint, kernels, out, context, chunk, kv_dtype, scale_file, max
         "attention_plan",
         ["in buffer<i32>"] * 2 + ["out buffer<i32>"] * 6 + ["out buffer<u8>", "out buffer<i32>"],
         [1, 1, 1],
-        extra=[S, i(context // PAGE), i(0), i(splits), i(0), i(plan_slots), i(PAGE)],
+        extra=[S, i(page_columns), i(0), i(splits), i(0), i(plan_slots), i(PAGE)],
     )
     # Prefill remains one request; decode plans cover every active sequence.
     op("plan", "model_glue", "decode_plan", ["in buffer<i32>"] * 2 + ["out buffer<i32>"] * 6, [1, 1, 1])
@@ -238,13 +258,6 @@ def generate(checkpoint, kernels, out, context, chunk, kv_dtype, scale_file, max
         "residual_add",
         ["out buffer<bf16>", "in buffer<bf16>", "in buffer<bf16>", "i32"],
         [ceil({"mul": ["tokens", H]}, 256), 1, 1],
-    )
-    op(
-        "gemv_fp8",
-        "fp8_gemv",
-        "kern_gemv_fp8_block128",
-        ["in buffer<fp8e4m3>", "in buffer<bf16>", "in buffer<bf16>", "out buffer<bf16>", "i32", "i32"],
-        [1, 1, 1],
     )
     # Each projection gets its own row grid; GEMM uses a single shared AOT specialization.
     meta = dsl["fp8_block_gemm"]
@@ -311,41 +324,15 @@ def generate(checkpoint, kernels, out, context, chunk, kv_dtype, scale_file, max
         w = weight(wname, [n, k], [t + ".weight" for t in tensors], dtype="fp8e4m3" if fp8 else "bf16")
         if fp8:
             scale = weight(label + ".scale", [n // 128, k // 128], [t + ".weight_scale_inv" for t in tensors])
-            opname = f"linear_{n}" if mode == "decode" else f"gemm_{n}"
+            opname = f"linear_{n}_{k}" if mode == "decode" else f"gemm_{n}"
             if opname not in ops:
                 if mode == "decode":
-                    small = copy.deepcopy(ops["gemv_fp8"]["impl"]["launches"][0])
-                    small.update(grid=[ceil(n, 8), "seqs", 1], when={"var": "seqs", "max": 8})
-                    large = copy.deepcopy(ops["gemm_fp8"]["impl"]["launches"][0])
-                    weight_meta = dsl["fp8_weight_gemm"]
-                    large.update(
-                        module=module("fp8_weight_gemm"),
-                        entry=weight_meta["entry"],
-                        shared_mem=weight_meta["shared_mem"],
-                        block=weight_meta["block"],
-                    )
-                    large.update(
-                        grid=[ceil("tokens", 128), ceil(n, 64), 1],
-                        when={"var": "seqs", "min": 9},
-                        args=[
-                            {"param": 2},
-                            {"param": 0},
-                            {"param": 1},
-                            {"param": 3},
-                            {"param": 6},
-                            {"param": 4},
-                            {"param": 5},
-                        ],
-                    )
-                    ops[opname] = {
-                        "params": ops["gemv_fp8"]["params"] + ["i32"],
-                        "impl": {"launches": [small, large]},
-                    }
+                    ops[opname] = linear(n, k, 1, tuning, dsl, module)
                 else:
                     ops[opname] = copy.deepcopy(ops["gemm_fp8"])
                     ops[opname]["impl"]["launches"][0]["grid"] = [ceil("tokens", 32), ceil(n, 64), 1]
             if mode == "decode":
-                call(mode, label, opname, w, scale, b(src), b(dst), i(n), i(k), T)
+                call(mode, label, opname, b(src), w, scale, b(dst), T, i(n), i(k))
             else:
                 call(mode, label, opname, b(src), w, scale, b(dst), T, i(n), i(k))
 
@@ -876,13 +863,16 @@ def generate(checkpoint, kernels, out, context, chunk, kv_dtype, scale_file, max
         projection(mode, "lm_head", "last", "logits", VOCAB, H, ["lm_head"])
         call(mode, "sample", "sample", b("logits"), b("next_token"))
     # Remove unselected generic templates so verification checks the actual operators only.
-    for name in ("gemv_fp8", "gemm_fp8"):
-        ops.pop(name)
+    ops.pop("gemm_fp8")
     for operator in ops.values():
         for launch in operator["impl"]["launches"]:
             if launch.get("module") in dsl:
-                launch["params"] += dsl[launch["module"]]["abi_tail"]
-                launch["args"] += [l(0), l(0)]
+                meta = dsl[launch["module"]]
+                if len(launch["params"]) == len(meta["signature"]):
+                    launch["params"] += meta["abi_tail"]
+                    launch["args"] += [l(0), l(0)]
+                elif len(launch["params"]) != len(meta["signature"]) + len(meta["abi_tail"]):
+                    raise ValueError(f"Unexpected AOT ABI for {launch['module']}")
     m = {
         "schema_version": 7,
         "model": "qwen3.8-27b-fp8",
@@ -903,6 +893,11 @@ def generate(checkpoint, kernels, out, context, chunk, kv_dtype, scale_file, max
             },
         },
     }
+    weight_paths = [str(checkpoint.resolve())]
+    if dspine is not None:
+        from dspine_manifest import augment
+
+        weight_paths += augment(m, kernels, dspine, dspine_tables, scales)
     out.mkdir(parents=True, exist_ok=True)
     bundle = out / "kernels"
     bundle.mkdir(exist_ok=True)
@@ -911,7 +906,7 @@ def generate(checkpoint, kernels, out, context, chunk, kv_dtype, scale_file, max
     (out / "model.json").write_text(json.dumps(m, indent=2) + "\n")
     (out / "kern.toml").write_text(
         '[targets.qwen38]\nmanifest = "model.json"\nkernels = "kernels"\nweights = ['
-        + json.dumps(str(checkpoint.resolve()))
+        + ", ".join(json.dumps(path) for path in weight_paths)
         + "]\n"
     )
     print(out / "model.json")
@@ -927,6 +922,8 @@ if __name__ == "__main__":
     parser.add_argument("--chunk", type=int, default=1024)
     parser.add_argument("--kv-dtype", choices=["bf16", "fp8"], default="bf16")
     parser.add_argument("--kv-scales", type=Path)
+    parser.add_argument("--dspine", type=Path)
+    parser.add_argument("--dspine-tables", type=Path, default=ROOT / "out/dspine-tables")
     args = parser.parse_args()
     generate(
         args.checkpoint,
@@ -937,4 +934,6 @@ if __name__ == "__main__":
         args.kv_dtype,
         args.kv_scales,
         args.max_seqs,
+        args.dspine,
+        args.dspine_tables,
     )

@@ -1,0 +1,69 @@
+{
+  "hardware_timestamps": true,
+  "source": "kern --trace; all-GEMM baseline revision; GSM8K and final HTTP smoke",
+  "by_groups": {
+    "1": {
+      "rounds": 597,
+      "round_ms": 37.64163807537686,
+      "draft_ms": 6.477821351758457,
+      "verify_ms": 30.18950143050343,
+      "context_ms": 0.38120319597988633,
+      "commit_ms": 0.36755312227804204,
+      "fp8_gemm_ms": 22.26564459296458
+    },
+    "8": {
+      "rounds": 47,
+      "round_ms": 88.33985487234044,
+      "draft_ms": 8.517951234042584,
+      "verify_ms": 77.66797221276292,
+      "context_ms": 0.4609696170212754,
+      "commit_ms": 1.4539721489361688,
+      "fp8_gemm_ms": 56.349498765957385
+    },
+    "4": {
+      "rounds": 131,
+      "round_ms": 56.0973579465649,
+      "draft_ms": 6.938585977099179,
+      "verify_ms": 47.65197509160369,
+      "context_ms": 0.3612879312977087,
+      "commit_ms": 0.8884506793893162,
+      "fp8_gemm_ms": 33.007025732824474
+    },
+    "2": {
+      "rounds": 217,
+      "round_ms": 42.46707293087556,
+      "draft_ms": 6.573937078341013,
+      "verify_ms": 34.805688907836114,
+      "context_ms": 0.3529982258064539,
+      "commit_ms": 0.4936772534562114,
+      "fp8_gemm_ms": 24.308655497695835
+    },
+    "16": {
+      "rounds": 3,
+      "round_ms": 137.64826833333333,
+      "draft_ms": 9.913184000000005,
+      "verify_ms": 124.04566699999977,
+      "context_ms": 0.8088699999999996,
+      "commit_ms": 2.657904,
+      "fp8_gemm_ms": 96.71916766666679
+    }
+  },
+  "round_kernel_counts": {
+    "seqs=1,tokens=16": {
+      "1137": 597
+    },
+    "seqs=8,tokens=128": {
+      "1142": 47
+    },
+    "seqs=4,tokens=64": {
+      "1142": 131
+    },
+    "seqs=2,tokens=32": {
+      "1137": 217
+    },
+    "seqs=16,tokens=256": {
+      "1137": 3
+    }
+  },
+  "health_counter_note": "The health dropped counter also includes late intervals excluded from wall-clock accounting; Parquet round record counts were checked separately."
+}
