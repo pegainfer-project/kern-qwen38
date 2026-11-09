@@ -2,7 +2,7 @@
 
 The native batched bundle targets SM120. `scripts/gen.py` binds the
 checkpoint, derived normalization weights, calibrated FP8 KV scales, chunked
-prefill and recurrent decode into a runnable kern manifest (128 sequences, context up to the checkpoint limit). CUDA build metadata
+prefill and recurrent decode into a runnable kern manifest (16 sequences, context up to the checkpoint limit). CUDA build metadata
 and Triton AOT metadata record the compiler versions and cubin identities.
 
 | Module | Implementation | Validation |
@@ -36,7 +36,7 @@ whole line. Matrix state is `[48, 128 V, 128 K]`, K contiguous. Slot 0 is null.
 BF16 recurrent state requires **zero dynamic shared memory**; the FP32 reference
 requires **65536 bytes** and the corresponding CUDA function attribute.
 The output uses the FP32 updated state before rounding the persistent write.
-The GDN line-table row stride is the declared maximum batch, 128 entries; it
+The GDN line-table row stride is the declared maximum batch, 16 entries; it
 must not be replaced by the live batch size.
 The conv entry remains BF16 history in either module. The standalone recurrence
 gate does not yet validate the conv entry or chunked prefill continuity.
@@ -113,5 +113,5 @@ long-context numerical equivalence.
 
 Benchmark FlashInfer GDN/GEMM candidates against the selected implementations,
 tune the batched kernels and evaluate long-context KV
-calibration and recurrent drift. The runnable bundle is text-only and greedy, with at most 128 running sequences.
+calibration and recurrent drift. The runnable bundle is text-only and greedy, with at most 16 running sequences.
 DSpine is downloaded; speculative integration awaits the user's instructions.

@@ -3,7 +3,7 @@
 Qwen3.8-27B text generation on one RTX PRO 5000 72GB Blackwell (SM120),
 with FP8 weights, calibrated FP8 KV cache and BF16 Gated DeltaNet state.
 The native kern bundle runs chunked prefill and greedy CUDA Graph decode.
-It supports up to 128 concurrent sequences and the checkpoint's 262,144-token
+It supports up to 16 concurrent sequences and the checkpoint's 262,144-token
 context limit. MTP and DSpine are not connected.
 
 This repository contains its own sources, generator, build scripts and GPU gates.
@@ -54,7 +54,7 @@ set to another explicit path.
 ```sh
 KERN=/path/to/kern/target/release/kern
 "$KERN" server --config out/qwen38/kern.toml qwen38 \
-  --port 8000 --max-seqs 128 --served-model-name qwen3.8-27b
+  --port 8000 --max-seqs 16 --served-model-name qwen3.8-27b
 ```
 
 ```sh
@@ -66,9 +66,9 @@ uv run scripts/http_check.py
 
 `/v1/models`, completions, chat completions and SSE are validated. Chat supports
 `chat_template_kwargs: {"enable_thinking": false}`. This manifest is greedy:
-set `temperature: 0`; stochastic sampling is rejected with HTTP 400. Up to 128 HTTP requests run together. Omit `--capacity` to use the available
+set `temperature: 0`; stochastic sampling is rejected with HTTP 400. Up to 16 HTTP requests run together. Omit `--capacity` to use the available
 device memory for the shared KV/state pool. The 262144 limit is per request;
-128 full-length contexts do not fit simultaneously in 72GB. Requests exceeding
+16 full-length contexts do not fit simultaneously in 72GB. Requests exceeding
 the available shared pool wait for admission.
 `results/http.json` records CLI agreement, queue isolation and streaming checks.
 

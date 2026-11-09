@@ -1,6 +1,6 @@
 {
   "device": "NVIDIA RTX PRO 5000 72GB Blackwell",
-  "max_batch": 128,
+  "max_batch": 16,
   "max_context": 262144,
   "kv_pages_shuffled": true,
   "max_context_boundary": false,
@@ -28,92 +28,68 @@
     {
       "batch": 3,
       "step": 0,
-      "mean_kl": 0.00023232607054524124,
-      "max_kl": 0.00030266144312918186,
+      "mean_kl": 0.0003167599206790328,
+      "max_kl": 0.0005869863089174032,
       "top1_matches": 3,
       "mismatch_margins": []
     },
     {
       "batch": 3,
       "step": 1,
-      "mean_kl": 0.00021225008822511882,
-      "max_kl": 0.00037653103936463594,
+      "mean_kl": 0.00025709476904012263,
+      "max_kl": 0.00038113631308078766,
       "top1_matches": 3,
       "mismatch_margins": []
     },
     {
       "batch": 8,
       "step": 0,
-      "mean_kl": 0.0002674151910468936,
-      "max_kl": 0.0006963133346289396,
+      "mean_kl": 0.0002540412242524326,
+      "max_kl": 0.0006589125841856003,
       "top1_matches": 8,
       "mismatch_margins": []
     },
     {
       "batch": 8,
       "step": 1,
-      "mean_kl": 0.000328470574459061,
-      "max_kl": 0.0016198849771171808,
+      "mean_kl": 0.00023318265448324382,
+      "max_kl": 0.0005359918577596545,
       "top1_matches": 8,
       "mismatch_margins": []
     },
     {
       "batch": 9,
       "step": 0,
-      "mean_kl": 0.00035630306228995323,
-      "max_kl": 0.0007357443682849407,
-      "top1_matches": 9,
-      "mismatch_margins": []
-    },
-    {
-      "batch": 9,
-      "step": 1,
-      "mean_kl": 0.00023669459915254265,
-      "max_kl": 0.00050389114767313,
-      "top1_matches": 9,
-      "mismatch_margins": []
-    },
-    {
-      "batch": 17,
-      "step": 0,
-      "mean_kl": 0.0002548028714954853,
-      "max_kl": 0.0005470830947160721,
-      "top1_matches": 16,
+      "mean_kl": 0.00027655676240101457,
+      "max_kl": 0.0004644198343157768,
+      "top1_matches": 8,
       "mismatch_margins": [
         0.0
       ]
     },
     {
-      "batch": 17,
+      "batch": 9,
       "step": 1,
-      "mean_kl": 0.0002943612926173955,
-      "max_kl": 0.0015760271344333887,
-      "top1_matches": 17,
+      "mean_kl": 0.0004888213006779552,
+      "max_kl": 0.0014626765623688698,
+      "top1_matches": 9,
       "mismatch_margins": []
     },
     {
-      "batch": 128,
+      "batch": 16,
       "step": 0,
-      "mean_kl": 0.00020624967874027789,
-      "max_kl": 0.002778403926640749,
-      "top1_matches": 124,
-      "mismatch_margins": [
-        0.0,
-        0.03125,
-        0.0,
-        0.03125
-      ]
+      "mean_kl": 0.0002897434460464865,
+      "max_kl": 0.0016444138018414378,
+      "top1_matches": 16,
+      "mismatch_margins": []
     },
     {
-      "batch": 128,
+      "batch": 16,
       "step": 1,
-      "mean_kl": 0.0003040586307179183,
-      "max_kl": 0.004902157932519913,
-      "top1_matches": 126,
-      "mismatch_margins": [
-        0.0,
-        0.0625
-      ]
+      "mean_kl": 0.00029605207964777946,
+      "max_kl": 0.0016078650951385498,
+      "top1_matches": 16,
+      "mismatch_margins": []
     }
   ]
 }

@@ -24,7 +24,7 @@ T = {"var": "tokens"}
 ceil = lambda value, divisor: {"ceil_div": [value, divisor]}
 
 
-def generate(checkpoint, kernels, out, context, chunk, kv_dtype, scale_file, max_seqs=128):
+def generate(checkpoint, kernels, out, context, chunk, kv_dtype, scale_file, max_seqs=16):
     config = json.loads((checkpoint / "config.json").read_text())
     text = config["text_config"]
     context = context or text["max_position_embeddings"]
@@ -32,8 +32,8 @@ def generate(checkpoint, kernels, out, context, chunk, kv_dtype, scale_file, max
         raise ValueError(
             "require batch <= chunk <= context <= checkpoint limit, with context divisible by 64"
         )
-    if not 1 <= max_seqs <= 128:
-        raise ValueError("max-seqs must be within 1..128")
+    if not 1 <= max_seqs <= 16:
+        raise ValueError("max-seqs must be within 1..16")
     splits = 32
     plan_slots = max_seqs * splits
     S = {"var": "seqs"}
@@ -923,7 +923,7 @@ if __name__ == "__main__":
     parser.add_argument("--kernels", type=Path, default=ROOT / "build/sm_120")
     parser.add_argument("--out", type=Path, default=ROOT / "out/qwen38")
     parser.add_argument("--context", type=int)
-    parser.add_argument("--max-seqs", type=int, default=128)
+    parser.add_argument("--max-seqs", type=int, default=16)
     parser.add_argument("--chunk", type=int, default=1024)
     parser.add_argument("--kv-dtype", choices=["bf16", "fp8"], default="bf16")
     parser.add_argument("--kv-scales", type=Path)

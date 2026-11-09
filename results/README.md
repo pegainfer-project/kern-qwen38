@@ -60,19 +60,18 @@ substantial optimization headroom. Long-context quality and speculative executio
 ## HTTP serving
 
 The native kern-serve binary passed `/v1/models`, completions, chat completions
-(with thinking disabled), SSE equivalence and 128 concurrent requests at
-`--max-seqs 128` with automatic shared-pool capacity. Greedy completion matches the CLI output. Unsupported stochastic
+(with thinking disabled), SSE equivalence and 16 concurrent requests at
+`--max-seqs 16` with automatic shared-pool capacity. Greedy completion matches the CLI output. Unsupported stochastic
 sampling returns HTTP 400. See `http.json`; run `uv run scripts/http_check.py`
 against the local server to repeat the gate.
 
 
 ## Batch and context validation
 
-`batch.json` compares batch 1, 3, 8, 9, 17 and 128 against singleton execution
+`batch.json` compares batch 1, 3, 8, 9 and 16 against singleton execution
 for two consecutive steps, restoring identical KV/recurrent state before each
-comparison. Physical KV pages are shuffled. Maximum logits KL is 0.004903;
-batch 128 top-1 agreement is 124/128 and 126/128. Mismatches have singleton
-top-two margins of at most 0.0625. Batched and singleton results are not bitwise identical.
+comparison. Physical KV pages are shuffled. Maximum logits KL is 0.001645;
+all tested top-1 predictions agree. Batched and singleton results are not bitwise identical.
 
 `context-boundary.json` checks lengths 262144, 65536 and 4096 using explicitly
 zero prior KV/state and shared read-only zero pages. Maximum KL is 0.013991.

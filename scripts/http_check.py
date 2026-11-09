@@ -79,6 +79,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base-url", default="http://127.0.0.1:8000")
     parser.add_argument("--out", type=Path, default=Path("out/http.json"))
-    parser.add_argument("--concurrency", type=int, default=128)
+    parser.add_argument("--concurrency", type=int, default=16)
     args = parser.parse_args()
     check(args.base_url.rstrip("/"), args.out, args.concurrency)

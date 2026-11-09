@@ -2,7 +2,7 @@
   "model": "qwen3.8-27b",
   "completion_matches_cli": true,
   "queued_requests_match": true,
-  "concurrent_requests": 128,
+  "concurrent_requests": 16,
   "sse_matches": true,
   "chat_response": "hello",
   "unsupported_sampling_status": 400
