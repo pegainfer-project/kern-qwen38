@@ -38,3 +38,24 @@ extern "C" __global__ void attention_plan(
     tile[plan_slots+t]=t;
   }
 }
+
+// Expand the shared split plan for 16-query causal verification (GQA=6,
+// FlashInfer query tile=64). Partial rows are query-major within each request.
+extern "C" __global__ void verify_attention_plan(
+    const int* split_indptr, const int* request, const int* kv_tile,
+    const unsigned char* valid, int* verify_request, int* verify_kv_tile,
+    int* qo_tile, unsigned char* verify_valid, int* merge, int* output_indptr,
+    int groups, int max_splits) {
+  for(int j=threadIdx.x;j<groups*max_splits*2;j+=blockDim.x) {
+    verify_request[j]=request[j/2];
+    verify_kv_tile[j]=kv_tile[j/2];
+    qo_tile[j]=j%2;
+    verify_valid[j]=valid[j/2];
+  }
+  for(int j=threadIdx.x;j<=groups*16;j+=blockDim.x) {
+    int s=j/16, row=j%16;
+    merge[j]=split_indptr[s]*16;
+    if(s<groups)merge[j]+=row*(split_indptr[s+1]-split_indptr[s]);
+  }
+  for(int s=threadIdx.x;s<=groups;s+=blockDim.x)output_indptr[s]=split_indptr[s]*16;
+}

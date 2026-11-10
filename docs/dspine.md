@@ -132,3 +132,21 @@ uv run --with 'lm-eval[api]==0.4.11' scripts/spec_bench.py \
 It warms the exact eight prompts first, then measures concurrency 1/2/4/8.
 Use `--prompts out/gsm8k-dspine/prompts.json` for the other server to replay the
 same inputs. `results/gsm8k-dspine.json` records the current comparison.
+
+
+## FlashInfer target verification attention
+
+Target verification uses the existing FlashInfer causal paged prefill kernel
+and variable-length merge, with at most 32 KV partitions per sequence. The
+shared page/partition plan is expanded for each request's 16 verification rows:
+GQA=6 maps 96 query/head positions to two 64-query tiles per partition. Partial
+outputs and LSEs are query-major within each request, and merge pointers use
+that exact layout. Planning runs once before the round's layers; the 16 target
+attention layers reuse the same workspace and plan. K and V page strides and
+calibrated scales are inherited from the ordinary attention ABI.
+
+The draft's 8192-window attention remains unchanged. No model-specific runtime
+branch or new attention math kernel is required. This changes reduction order,
+so numerical agreement is assessed with output tolerances and end-to-end KL,
+without requiring identical generated tokens. See
+[validation and performance](../results/verify-attention.md).

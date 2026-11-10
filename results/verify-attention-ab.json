@@ -1,0 +1,137 @@
+[
+  {
+    "prefill": 512,
+    "chunk": 1024,
+    "logits": {
+      "rows": 17,
+      "differ": 13,
+      "flips": 2,
+      "within": 2,
+      "kl_max": 0.0005002671576490162,
+      "kl_at": "step 14",
+      "limit_kl": 0.01,
+      "top_min": 18,
+      "top_at": "step 8",
+      "top_differ": 6,
+      "flipped": [
+        {
+          "row": "step 8",
+          "argmax_a": 1490118,
+          "argmax_b": 2235078,
+          "margin_a": 0.0,
+          "kl": 0.00016508467084208443,
+          "rank_in_b": 2,
+          "within": true
+        },
+        {
+          "row": "step 12",
+          "argmax_a": 149363,
+          "argmax_b": 16763,
+          "margin_a": 0.03125,
+          "kl": 9.942769851793122e-05,
+          "rank_in_b": 2,
+          "within": true
+        }
+      ],
+      "elapsed_s": 1.1805177927017212
+    },
+    "steps": [
+      {
+        "program": "round",
+        "rows": 16,
+        "spans": 17,
+        "eager_ms": [
+          36.431739807128906,
+          36.03709411621094
+        ],
+        "derived_ms": 35.99042892456055,
+        "graph_ms": [
+          34.03776168823242,
+          33.63942337036133
+        ],
+        "span_ms": [
+          0.8441599607467651,
+          0.40284809470176697
+        ]
+      }
+    ],
+    "verdict": {
+      "code": 0,
+      "pass": true,
+      "summary": "logit evidence: end-to-end KL \u2264 5.00e-4 (limit 1e-2) on 17 rows, argmax agrees except 2 flips within the limit",
+      "elapsed_s": 21.07581329345703
+    }
+  },
+  {
+    "prefill": 8192,
+    "chunk": 1024,
+    "logits": {
+      "rows": 24,
+      "differ": 13,
+      "flips": 3,
+      "within": 3,
+      "kl_max": 0.00016988231764519704,
+      "kl_at": "step 15",
+      "limit_kl": 0.01,
+      "top_min": 18,
+      "top_at": "step 11",
+      "top_differ": 6,
+      "flipped": [
+        {
+          "row": "step 5",
+          "argmax_a": 2483420,
+          "argmax_b": 2731740,
+          "margin_a": 0.0,
+          "kl": 0.00012403538453604947,
+          "rank_in_b": 3,
+          "within": true
+        },
+        {
+          "row": "step 8",
+          "argmax_a": 2731740,
+          "argmax_b": 2483420,
+          "margin_a": 0.03125,
+          "kl": 7.895996904906644e-05,
+          "rank_in_b": 2,
+          "within": true
+        },
+        {
+          "row": "step 9",
+          "argmax_a": 220,
+          "argmax_b": 62,
+          "margin_a": 0.015625,
+          "kl": 5.74301801022823e-05,
+          "rank_in_b": 2,
+          "within": true
+        }
+      ],
+      "elapsed_s": 1.27373206615448
+    },
+    "steps": [
+      {
+        "program": "round",
+        "rows": 16,
+        "spans": 17,
+        "eager_ms": [
+          51.50415802001953,
+          41.38074493408203
+        ],
+        "derived_ms": 41.23036575317383,
+        "graph_ms": [
+          48.91241455078125,
+          38.71846389770508
+        ],
+        "span_ms": [
+          11.10489559173584,
+          0.8311039805412292
+        ]
+      }
+    ],
+    "verdict": {
+      "code": 0,
+      "pass": true,
+      "summary": "logit evidence: end-to-end KL \u2264 1.70e-4 (limit 1e-2) on 24 rows, argmax agrees except 3 flips within the limit",
+      "elapsed_s": 32.06482696533203
+    }
+  }
+]

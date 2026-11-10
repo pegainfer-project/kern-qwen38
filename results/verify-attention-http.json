@@ -1,0 +1,12 @@
+{
+  "model": "Qwen/Qwen3.8-27B-FP8",
+  "completion_matches_cli": true,
+  "queued_requests_match": true,
+  "concurrent_requests": 16,
+  "sse_matches": true,
+  "chat_response": "hello",
+  "same_seed_equal": true,
+  "different_seed_changed": true,
+  "mixed_sampling_requests": 16,
+  "sampled_sse": true
+}

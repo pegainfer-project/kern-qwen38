@@ -10,7 +10,7 @@ and Triton AOT metadata record the compiler versions and cubin identities.
 | `gdn_decode_bf16` | kern fused conv and recurrent update/norm/gate; BF16 state updated in FP32 registers | 16 recurrent steps against CPU, batch 1/8, null slot |
 | `gdn_decode_fp32` | kern reference using asynchronous shared-memory state loads | Same recurrence oracle |
 | `attn_prep_fp8` / `attn_prep_bf16` | Fused Q/K Gemma norm, partial RoPE, cache append | CPU norm/RoPE, exact cache conversion, non-unit scales, masked slots, page boundary |
-| `attention_fp8` / `attention_bf16` | Latest FlashInfer paged causal prefill, decode and merge | GQA=6, length 1/67/1025, permuted physical pages; one query per request |
+| `attention_fp8` / `attention_bf16` | Latest FlashInfer paged causal prefill, decode and merge | GQA=6 ordinary decode and 16-row DSpine split-KV verification; permuted pages, variable lengths and batches 1/2/3/8/16 |
 | `fp8_gemv` | Streaming warp-per-row W8A16 decode candidate | CPU FP64 dot-product oracle, block-scale boundaries and row tails, batch 1/8 |
 | `embedding` | kern-qwen3 indexed BF16 gather with vocabulary bounds trap | Whole-model E2E |
 | `gemma_rms_norm`, `weight_prep` | kern norms and derived weight tables | Whole-model E2E |

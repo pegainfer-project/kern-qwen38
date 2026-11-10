@@ -541,6 +541,9 @@ def augment(m, kernels, draft, tables, scales):
         ops[name] = linear(n, k, 16, tuning, dsl, module)
         return name
 
+    from verify_attention import attach
+
+    attention_plan, flashinfer_attention = attach(m, kernels)
     plain = copy.deepcopy(m["programs"]["prefill"]["calls"])
     # context() was appended above; rebuild only the target forward here.
     plain = plain[: next(j for j, c in enumerate(plain) if c["label"] == "context.fc")]
@@ -650,23 +653,8 @@ def augment(m, kernels, draft, tables, scales):
             idx = attn_layer
             attn_layer += 1
             verify.append(
-                dc(
-                    "verify_attention",
-                    ["seqs", 24, 1],
-                    {
-                        "Q": b("q"),
-                        "K": b("k"),
-                        "V": b("k"),
-                        "Cache": st("kv", idx * 2 * 4 * 64 * 256),
-                        "Lines": b("d.lines"),
-                        "Pages": b("pages"),
-                        "Lengths": b("lengths"),
-                        "Output": b("attn.out"),
-                        "TABLE": i(m["buffers"]["pages"]["shape"][1]),
-                        "KS": f(scales[str(layer)]["k"]),
-                        "VS": f(scales[str(layer)]["v"]),
-                    },
-                    label,
+                flashinfer_attention(
+                    b("q"), b("attn.out"), "kv", idx, scales[str(layer)]["k"], scales[str(layer)]["v"], label
                 )
             )
             continue
@@ -690,7 +678,8 @@ def augment(m, kernels, draft, tables, scales):
         ),
     ]
     round_calls = (
-        draft_calls
+        attention_plan
+        + draft_calls
         + verify
         + context(False)
         + [call("spec_count", b("d.draft"), b("verify_tokens"), b("accepted"))]

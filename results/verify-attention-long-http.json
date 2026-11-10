@@ -1,0 +1,16 @@
+{
+  "usage": {
+    "prompt_tokens": 32042,
+    "completion_tokens": 256,
+    "total_tokens": 32298,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "elapsed_seconds": 15.647281814999587,
+  "finish_reason": "length",
+  "text_prefix": "# Binary Search: Detailed Explanation and Implementation\n\n## Conceptual Overview\n\nBinary search is an efficient algorith"
+}

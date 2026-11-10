@@ -1,0 +1,90 @@
+[
+  {
+    "batch": 1,
+    "length": 16,
+    "max_abs_error": 0.00390625,
+    "baseline_ms": 0.006444799900054932,
+    "flashinfer_ms": 0.00825386643409729,
+    "speedup": 0.7808219277005768
+  },
+  {
+    "batch": 1,
+    "length": 65,
+    "max_abs_error": 0.0009765625,
+    "baseline_ms": 0.010381866494814556,
+    "flashinfer_ms": 0.01037013332049052,
+    "speedup": 1.0011314391012556
+  },
+  {
+    "batch": 1,
+    "length": 1024,
+    "max_abs_error": 0.000244140625,
+    "baseline_ms": 0.06765120029449463,
+    "flashinfer_ms": 0.022104533513387044,
+    "speedup": 3.060512462455877
+  },
+  {
+    "batch": 1,
+    "length": 8192,
+    "max_abs_error": 0.0001220703125,
+    "baseline_ms": 0.5190976142883301,
+    "flashinfer_ms": 0.05721173286437988,
+    "speedup": 9.07327200731445
+  },
+  {
+    "batch": 1,
+    "length": 32768,
+    "max_abs_error": 6.103515625e-05,
+    "baseline_ms": 2.176701863606771,
+    "flashinfer_ms": 0.18147093454996746,
+    "speedup": 11.994768578256387
+  },
+  {
+    "batch": 1,
+    "length": 34904,
+    "max_abs_error": 3.0517578125e-05,
+    "baseline_ms": 2.205103047688802,
+    "flashinfer_ms": 0.20087253252665202,
+    "speedup": 10.977623570291902
+  },
+  {
+    "batch": 1,
+    "length": 131072,
+    "max_abs_error": 1.52587890625e-05,
+    "baseline_ms": 10.941434733072917,
+    "flashinfer_ms": 0.6906410853068033,
+    "speedup": 15.842432438279292
+  },
+  {
+    "batch": 2,
+    "length": 32768,
+    "max_abs_error": 6.103515625e-05,
+    "baseline_ms": 2.0892917633056642,
+    "flashinfer_ms": 0.2987626711527506,
+    "speedup": 6.993148626112854
+  },
+  {
+    "batch": 3,
+    "length": 1025,
+    "max_abs_error": 0.000244140625,
+    "baseline_ms": 0.07181119918823242,
+    "flashinfer_ms": 0.02744320034980774,
+    "speedup": 2.6167210191553156
+  },
+  {
+    "batch": 8,
+    "length": 8193,
+    "max_abs_error": 0.0001220703125,
+    "baseline_ms": 0.8011840184529623,
+    "flashinfer_ms": 0.3233279863993327,
+    "speedup": 2.4779296941633873
+  },
+  {
+    "batch": 16,
+    "length": 4097,
+    "max_abs_error": 0.0001220703125,
+    "baseline_ms": 0.7905920028686524,
+    "flashinfer_ms": 0.34136533737182617,
+    "speedup": 2.315970358781665
+  }
+]
