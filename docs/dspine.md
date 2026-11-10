@@ -235,3 +235,45 @@ and long-8k regressed; all four outputs diverged. This small check found no
 aggregate acceptance collapse and does not establish unchanged quality or
 acceptance under service load. Portable benchmark and per-case evidence is
 in `results/prefill-fp8.json`.
+
+## ReplaySSM verify register pressure — 2026-11-11
+
+The SM120 verify specialization uses K slices of 16 elements over eight
+iterations, with the original 32-value tile and four warps. This reduces the
+live FP32/TF32x3 operand footprint: 219 registers and no stack spill, versus
+255 registers and a 640-byte stack with 64-element slices. The kernel source,
+FP32 intermediate types, TF32x3 dot policy and BF16 residual-cache storage are
+unchanged. K-reduction grouping changes, so outputs are not bitwise identical.
+
+The direct FP32 recurrence and accepted-state oracle passes at batch
+1/2/4/8/16, including acceptance lengths 1..16 and a null state slot. Maximum
+verify error is 3.05e-5 and maximum committed-state error 9.77e-4, within the
+existing atol=0.002 / rtol=0.02. Rebuild the cubins and regenerate the bundle
+before checking it; with the local kern Python binding available:
+
+```sh
+uv run python scripts/replayssm_check.py \
+  --bundle out/qwen38-dspine --out out/replayssm-timed.json --timing
+```
+
+The optional timing mode uses 12 CUDA-graph replays per shape, flushing 128 MiB
+before each timed launch, and records output/state hashes. Verify timing runs
+before commit, preserving the initial state. Isolated synthetic verify time
+falls 17–30% over batches 1–16 on one RTX PRO 5000 72GB.
+
+Full-model speculative-round probes at 128/1k/8k/32k prefixes emit identical
+accepted prefixes over 16 rounds (52 tokens per side). Fifteen rounds have
+identical proposals, allowing 240 distributions to be compared: mean KL
+0.000615 and maximum row KL 0.003515, passing the 0.01 per-row gate. Two top-1
+flips are beyond the accepted prefix. Whole-model probes cover batch 1;
+operator oracles cover the larger batches. Ordinary decode-only logits checks
+would not exercise the changed ReplaySSM specialization.
+
+The complete November 10 workload (157 scenarios, 261,672 calls, 16 samples)
+costs **26,376.796 GPU seconds**, versus 26,673.647 on the baseline: **1.11%
+less total GPU time**. Weighted replay-verify call time falls **22.27%** and
+round program time **1.89%**. Unchanged prefill time increases 0.24% between
+runs; the total result is reported without normalizing that drift. This
+candidate excludes the W8A8-MLP and native FP8-prefill experiments above.
+Portable results, resources, operator samples and round evidence are retained
+in `results/replayssm-spill.json`; raw artifacts are in `out/replay-spill/`.

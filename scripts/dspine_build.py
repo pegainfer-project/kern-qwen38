@@ -156,8 +156,9 @@ def specifications(load):
         "BV": 32,
         "BS": 16,
         "BC": 16,
-        "NK": 2,
-        "BKT": 64,
+        # Smaller K slices keep the FP32/TF32x3 intermediates in registers on SM120.
+        "NK": 8,
+        "BKT": 16,
         "MAX_CACHE_LEN": 16,
         "SOFTPLUS_THRESHOLD": 20.0,
         "USE_QK_L2NORM_IN_KERNEL": True,

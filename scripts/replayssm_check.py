@@ -2,7 +2,9 @@
 """Compare AOT ReplaySSM verify/commit against a direct FP32 recurrence with BF16 storage."""
 
 import argparse
+import hashlib
 import json
+import statistics
 import tempfile
 from pathlib import Path
 
@@ -12,7 +14,7 @@ from kern.host import region
 
 
 @torch.inference_mode()
-def check(bundle, out):
+def check(bundle, out, timing=False):
     torch.manual_seed(731)
     torch.backends.cuda.matmul.allow_tf32 = False
     original = json.loads((bundle / "model.json").read_text())
@@ -167,6 +169,28 @@ def check(bundle, out):
         unchanged = views["state"][1 : groups + 1, 3 * 10240 :].view_as(initial)
         if not torch.equal(unchanged, initial):
             raise AssertionError("verify mutated committed state")
+        times = []
+        if timing:
+            stream = torch.cuda.Stream()
+            graph = torch.cuda.CUDAGraph()
+            variables = {"seqs": groups, "tokens": rows}
+            with torch.cuda.stream(stream):
+                rt.enqueue_after("replay_verify", variables, stream.cuda_stream)
+            stream.synchronize()
+            with torch.cuda.graph(graph, stream=stream):
+                rt.enqueue_after("replay_verify", variables, stream.cuda_stream)
+            for _ in range(4):
+                graph.replay()
+            flush = torch.empty(128 * 1024 * 1024, dtype=torch.uint8, device="cuda")
+            start, end = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
+            for sample in range(12):
+                flush.fill_(sample)
+                start.record()
+                graph.replay()
+                end.record()
+                end.synchronize()
+                times.append(start.elapsed_time(end))
+            del graph, flush
         rt.run("replay_commit", {"seqs": groups, "tokens": rows})
         actual_state = views["state"][1 : groups + 1, 3 * 10240 :].view_as(initial).clone()
         torch.testing.assert_close(actual, reference, atol=0.002, rtol=0.02)
@@ -179,6 +203,15 @@ def check(bundle, out):
             "verify_preserves_state": True,
             "null_slots": 1 if groups == 4 else 0,
         }
+        if timing:
+            case.update(
+                verify_ms=statistics.median(times),
+                samples_ms=times,
+                verify_sha256=hashlib.sha256(actual.view(torch.uint8).cpu().numpy().tobytes()).hexdigest(),
+                commit_sha256=hashlib.sha256(
+                    actual_state.view(torch.uint8).cpu().numpy().tobytes()
+                ).hexdigest(),
+            )
         cases.append(case)
         print(json.dumps(case), flush=True)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -195,5 +228,6 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--bundle", type=Path, required=True)
     p.add_argument("--out", type=Path, default=Path("out/replayssm.json"))
+    p.add_argument("--timing", action="store_true")
     a = p.parse_args()
-    check(a.bundle.resolve(), a.out)
+    check(a.bundle.resolve(), a.out, a.timing)
