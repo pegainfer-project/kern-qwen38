@@ -189,3 +189,49 @@ The measured outcomes are in `results/verify-w8a8.json`; selected Triton
 configurations and synthetic operator errors are in
 `results/verify-w8a8-tuning.json`. These measurements support the experiment;
 they do not establish a general request-throughput improvement.
+
+## Native FP8 prefill experiment — 2026-11-11
+
+`scripts/prefill_fp8.py` builds a separate bundle with native FP8 attention
+from the served BF16-query/FP8-KV bundle:
+
+```sh
+uv run python scripts/prefill_fp8.py \
+  --baseline out/qwen38-dspine --out out/prefill-fp8
+```
+
+The candidate quantizes each query head dynamically, caches each lane's two
+scales before the KV loop, and uses the pinned FlashInfer FP8 layout with
+16 packed query rows. It generates the corresponding plan and reads the ABI
+and shared-memory sizes from a compiled probe. The pinned VO-split output
+writer bypasses the V-scale transform; the wrapper applies that scale inside
+the same kernel after synchronizing the CTA. Decode and verification remain
+unchanged. No third-party headers or generator defaults are modified.
+
+On one RTX PRO 5000 72GB, the November 10 traffic workload (157 scenarios,
+261,672 calls, 16 samples each) costs **25,904.147 GPU seconds**, versus
+26,673.647 on the deployed baseline: **2.88% less total GPU time**. Weighted
+prefill program time falls 8.46%; prefill attention call time, including
+online Q quantization and output scaling, falls 21.16%. Unchanged round time
+increases 0.34% between runs. These are fixed-work kernel measurements.
+
+A teacher-forced `kern test e2e-logits` diagnostic set of 12 questions and
+768 positions passes the mean-KL gate: **0.00150 <= 0.01**. It covers code,
+Chinese, mathematics and long contexts through the 32–128k depth bucket.
+Seven top-1 flips remain; passing this mean-KL check does not imply identical
+greedy generations or identical speculative acceptance. The question set is
+small and is not a broad quality benchmark.
+
+Artifacts, recordings and logs are retained in `out/prefill-fp8/`. The first
+integrated variant and its incomplete performance run are in
+`out/prefill-fp8-v1/`; only the final variant has a complete workload report.
+`scripts/prefill_round_check.py` compares free-running speculative outputs
+and counters for supplied tokenized prompts. The separate verification-MLP
+W8A8 optimization above is not included in these measurements.
+
+Four batch-1 free-running round checks each generated 256 tokens. Baseline
+used 339 rounds in total, candidate 340. Code and long-32k improved, Chinese
+and long-8k regressed; all four outputs diverged. This small check found no
+aggregate acceptance collapse and does not establish unchanged quality or
+acceptance under service load. Portable benchmark and per-case evidence is
+in `results/prefill-fp8.json`.
