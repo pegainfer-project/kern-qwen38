@@ -326,3 +326,55 @@ Results and split curves are in `results/verify-attention-fp8.json`; raw files
 are under `out/verify-fp8/` and `out/verify-bf16/`. Prior MLP, prefill and replay
 optimizations are excluded; combination is deferred until optimization work
 ends. The original generator defaults and deployed bundle remain unchanged.
+
+## Draft attention GQA packing and Split-KV — 2026-11-11
+
+`scripts/dspine_attention.py` builds isolated draft-attention candidates from
+the served bundle without altering generator defaults or other operators:
+
+```sh
+uv run python scripts/dspine_attention.py \
+  --baseline out/qwen38-dspine --out out/dspine-attention \
+  --splits 8 --bk 32 --split-warps 4 --reduce-warps 8 --stages 2
+uv run --with out/wheels/kern_llm-0.4.0-cp310-abi3-manylinux_2_39_x86_64.whl \
+  python scripts/dspine_attention_check.py \
+  --baseline out/qwen38-dspine --bundle out/dspine-attention \
+  --out out/dspine-attention/operator-check.json
+```
+
+The deployed `block_attention` cubin runs one CTA per query head (`QH=32`)
+without GQA KV reuse or history partitioning, and spills 360 stack bytes (255
+registers, 94 static STL, 92 static LDL). `draft_attention_split` packs four GQA
+query heads and 16 block tokens into a `64x128` tile per `(seq, khead)`
+(`KH=8`), splitting `[max(0, prefix - 8192), prefix)` across `SPLITS=8` CTAs
+with 32-bit ring modulo and FP32 partial accumulators in operator scratch.
+`draft_attention_reduce` computes the 16-row live causal block and merges active
+history splits via exact LSE rescaling (`226` and `208` registers, zero stack
+spill, zero STL/LDL).
+
+All 12 AOT runtime cases across batches 1–16 (zero-prefix 16, ring wraparound
+8,208/8,225, long contexts through 95,663, and padded zero-length slots) pass
+the unchanged BF16 elementwise gate (`atol=0.002, rtol=0.02`, max abs error
+`1.95e-3`, relative RMS `<= 0.291%`) against baseline, pass `atol=0.004,
+rtol=0.02` against an independent FP32 oracle, and match the single-key first
+row bit-identically (`atol=0, rtol=0`). Cold 5-layer CUDA-graph latency drops
+90.3% at batch 1 / context 47,708 (`5.082 -> 0.492 ms`) and 82.2% at batch 16
+(`16.360 -> 2.910 ms`).
+
+On one RTX PRO 5000 72GB, the complete November 10 workload (157 scenarios,
+261,672 calls, 16 samples) costs **25,618.253 GPU seconds**, versus 26,673.647
+on the original baseline: **3.96% less total GPU time**. Weighted
+`dspine_attention` call time falls **84.92%** (`1,450.881 -> 218.841 s`), and
+`round` program time falls **6.44%** (**7.73%** at batch 1 and **6.56%** at
+batch 2). Unchanged prefill is 0.34% slower between runs.
+
+Full-model speculative-round probes at 128/1k/8k/32k prefixes emit identical
+accepted prefixes over all 16 rounds (52 tokens per side); 15 rounds have
+identical proposals (240 comparable logits rows) with **0.0 mean and max KL**
+and zero top-1 flips (`<= 0.01` gate), because target-model verification kernels
+are unchanged. Four 256-token free-running cases use 339 baseline rounds versus
+331 candidate rounds, with bit-identical token sequences on `code`, `chinese`,
+and `long-32768` (`41.30 -> 37.13 ms/round`, `-10.1%`). Portable evidence is in
+`results/dspine-attention.json`; raw files are under `out/dspine-attention/`.
+Prior MLP, prefill, ReplaySSM and verification-attention optimizations remain
+excluded.
