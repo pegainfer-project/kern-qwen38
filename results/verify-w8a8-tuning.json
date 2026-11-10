@@ -1,0 +1,82 @@
+[
+  {
+    "rows": 16,
+    "n": 34816,
+    "k": 5120,
+    "config": "BM: 16, BN: 128, BK: 128, num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None",
+    "quant_gemm_ms": 0.16648214777458958,
+    "relative_rms": 0.025858690962195396
+  },
+  {
+    "rows": 32,
+    "n": 34816,
+    "k": 5120,
+    "config": "BM: 32, BN: 128, BK: 128, num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None",
+    "quant_gemm_ms": 0.16806399900662272,
+    "relative_rms": 0.025850709527730942
+  },
+  {
+    "rows": 64,
+    "n": 34816,
+    "k": 5120,
+    "config": "BM: 64, BN: 64, BK: 128, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None",
+    "quant_gemm_ms": 0.17096709779330663,
+    "relative_rms": 0.025819698348641396
+  },
+  {
+    "rows": 128,
+    "n": 34816,
+    "k": 5120,
+    "config": "BM: 64, BN: 128, BK: 128, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None",
+    "quant_gemm_ms": 0.19779504740995074,
+    "relative_rms": 0.025838438421487808
+  },
+  {
+    "rows": 256,
+    "n": 34816,
+    "k": 5120,
+    "config": "BM: 64, BN: 128, BK: 128, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None",
+    "quant_gemm_ms": 0.299753942246576,
+    "relative_rms": 0.025857042521238327
+  },
+  {
+    "rows": 16,
+    "n": 5120,
+    "k": 17408,
+    "config": "BM: 32, BN: 32, BK: 128, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None",
+    "quant_gemm_ms": 0.1091932266767771,
+    "relative_rms": 0.025857754051685333
+  },
+  {
+    "rows": 32,
+    "n": 5120,
+    "k": 17408,
+    "config": "BM: 16, BN: 32, BK: 128, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None",
+    "quant_gemm_ms": 0.11922280262224376,
+    "relative_rms": 0.025807730853557587
+  },
+  {
+    "rows": 64,
+    "n": 5120,
+    "k": 17408,
+    "config": "BM: 16, BN: 64, BK: 128, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None",
+    "quant_gemm_ms": 0.12835908959372133,
+    "relative_rms": 0.02581128478050232
+  },
+  {
+    "rows": 128,
+    "n": 5120,
+    "k": 17408,
+    "config": "BM: 32, BN: 64, BK: 128, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None",
+    "quant_gemm_ms": 0.1403416113613488,
+    "relative_rms": 0.025820815935730934
+  },
+  {
+    "rows": 256,
+    "n": 5120,
+    "k": 17408,
+    "config": "BM: 64, BN: 64, BK: 128, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None",
+    "quant_gemm_ms": 0.17434080062167986,
+    "relative_rms": 0.025822235271334648
+  }
+]

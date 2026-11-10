@@ -1,0 +1,280 @@
+{
+  "baseline_cost_seconds": 26673.646806647987,
+  "candidate_cost_seconds": 25153.26,
+  "cost_reduction_percent": 5.699957225993368,
+  "rounds_checked": 16,
+  "accepted_counts_total": [
+    52,
+    52
+  ],
+  "all_accepted_tokens_equal": true,
+  "rounds_with_identical_proposals": 12,
+  "scored_logit_rows": 192,
+  "mean_kl": 0.0015371327366059024,
+  "max_row_kl": 0.011344325728714466,
+  "max_row_kl_limit": 0.01,
+  "numerical_gate_passed": false,
+  "top1_flips": [
+    {
+      "context": 128,
+      "step": 2,
+      "row": 5,
+      "baseline_margin": 0.125,
+      "before_accepted_boundary": false
+    },
+    {
+      "context": 128,
+      "step": 3,
+      "row": 12,
+      "baseline_margin": 0.125,
+      "before_accepted_boundary": false
+    },
+    {
+      "context": 1024,
+      "step": 0,
+      "row": 8,
+      "baseline_margin": 0.0,
+      "before_accepted_boundary": false
+    },
+    {
+      "context": 1024,
+      "step": 1,
+      "row": 10,
+      "baseline_margin": 0.0,
+      "before_accepted_boundary": false
+    },
+    {
+      "context": 8192,
+      "step": 2,
+      "row": 12,
+      "baseline_margin": 0.1875,
+      "before_accepted_boundary": false
+    },
+    {
+      "context": 32768,
+      "step": 1,
+      "row": 14,
+      "baseline_margin": 0.125,
+      "before_accepted_boundary": false
+    }
+  ],
+  "numerical_cases": [
+    {
+      "context": 128,
+      "step": 0,
+      "same_history": true,
+      "same_proposals": true,
+      "accepted": [
+        10,
+        10
+      ],
+      "same_accepted_tokens": true,
+      "mean_kl": 0.0009315803181380033,
+      "max_row_kl": 0.005664112512022257,
+      "top1_flips": 0
+    },
+    {
+      "context": 128,
+      "step": 1,
+      "same_history": true,
+      "same_proposals": false,
+      "accepted": [
+        4,
+        4
+      ],
+      "same_accepted_tokens": true
+    },
+    {
+      "context": 128,
+      "step": 2,
+      "same_history": true,
+      "same_proposals": true,
+      "accepted": [
+        3,
+        3
+      ],
+      "same_accepted_tokens": true,
+      "mean_kl": 0.0018410267075523734,
+      "max_row_kl": 0.011259838938713074,
+      "top1_flips": 1
+    },
+    {
+      "context": 128,
+      "step": 3,
+      "same_history": true,
+      "same_proposals": true,
+      "accepted": [
+        3,
+        3
+      ],
+      "same_accepted_tokens": true,
+      "mean_kl": 0.0014516388764604926,
+      "max_row_kl": 0.003147117793560028,
+      "top1_flips": 1
+    },
+    {
+      "context": 1024,
+      "step": 0,
+      "same_history": true,
+      "same_proposals": true,
+      "accepted": [
+        2,
+        2
+      ],
+      "same_accepted_tokens": true,
+      "mean_kl": 0.0013616137439385056,
+      "max_row_kl": 0.006879018619656563,
+      "top1_flips": 1
+    },
+    {
+      "context": 1024,
+      "step": 1,
+      "same_history": true,
+      "same_proposals": true,
+      "accepted": [
+        9,
+        9
+      ],
+      "same_accepted_tokens": true,
+      "mean_kl": 0.0008142058504745364,
+      "max_row_kl": 0.0024171636905521154,
+      "top1_flips": 1
+    },
+    {
+      "context": 1024,
+      "step": 2,
+      "same_history": true,
+      "same_proposals": true,
+      "accepted": [
+        4,
+        4
+      ],
+      "same_accepted_tokens": true,
+      "mean_kl": 0.0013416353613138199,
+      "max_row_kl": 0.004531139507889748,
+      "top1_flips": 0
+    },
+    {
+      "context": 1024,
+      "step": 3,
+      "same_history": true,
+      "same_proposals": true,
+      "accepted": [
+        3,
+        3
+      ],
+      "same_accepted_tokens": true,
+      "mean_kl": 0.001932160696014762,
+      "max_row_kl": 0.008709653280675411,
+      "top1_flips": 0
+    },
+    {
+      "context": 8192,
+      "step": 0,
+      "same_history": true,
+      "same_proposals": true,
+      "accepted": [
+        1,
+        1
+      ],
+      "same_accepted_tokens": true,
+      "mean_kl": 0.0019484516233205795,
+      "max_row_kl": 0.006003114860504866,
+      "top1_flips": 0
+    },
+    {
+      "context": 8192,
+      "step": 1,
+      "same_history": true,
+      "same_proposals": true,
+      "accepted": [
+        3,
+        3
+      ],
+      "same_accepted_tokens": true,
+      "mean_kl": 0.0017455342458561063,
+      "max_row_kl": 0.006251751445233822,
+      "top1_flips": 0
+    },
+    {
+      "context": 8192,
+      "step": 2,
+      "same_history": true,
+      "same_proposals": true,
+      "accepted": [
+        1,
+        1
+      ],
+      "same_accepted_tokens": true,
+      "mean_kl": 0.0022828516084700823,
+      "max_row_kl": 0.011344325728714466,
+      "top1_flips": 1
+    },
+    {
+      "context": 8192,
+      "step": 3,
+      "same_history": true,
+      "same_proposals": false,
+      "accepted": [
+        2,
+        2
+      ],
+      "same_accepted_tokens": true
+    },
+    {
+      "context": 32768,
+      "step": 0,
+      "same_history": true,
+      "same_proposals": true,
+      "accepted": [
+        1,
+        1
+      ],
+      "same_accepted_tokens": true,
+      "mean_kl": 0.0009902209276333451,
+      "max_row_kl": 0.003207354573532939,
+      "top1_flips": 0
+    },
+    {
+      "context": 32768,
+      "step": 1,
+      "same_history": true,
+      "same_proposals": true,
+      "accepted": [
+        3,
+        3
+      ],
+      "same_accepted_tokens": true,
+      "mean_kl": 0.0018046728800982237,
+      "max_row_kl": 0.006531876511871815,
+      "top1_flips": 1
+    },
+    {
+      "context": 32768,
+      "step": 2,
+      "same_history": true,
+      "same_proposals": false,
+      "accepted": [
+        1,
+        1
+      ],
+      "same_accepted_tokens": true
+    },
+    {
+      "context": 32768,
+      "step": 3,
+      "same_history": true,
+      "same_proposals": false,
+      "accepted": [
+        2,
+        2
+      ],
+      "same_accepted_tokens": true
+    }
+  ],
+  "limitations": [
+    "Batch-1 model probes only; larger batches have synthetic operator checks and performance measurements.",
+    "One repeated prose prompt at four prefix lengths; no broad quality or service-load acceptance evaluation.",
+    "Logits compared only for matching token histories and matching proposal IDs."
+  ]
+}

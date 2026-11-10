@@ -150,3 +150,42 @@ branch or new attention math kernel is required. This changes reduction order,
 so numerical agreement is assessed with output tolerances and end-to-end KL,
 without requiring identical generated tokens. See
 [validation and performance](../results/verify-attention.md).
+
+## Verification MLP W8A8 experiment — 2026-11-10
+
+`scripts/verify_w8a8.py` builds an isolated candidate from an existing DSpine
+bundle. It autotunes the gate/up and down projections at 16/32/64/128/256 rows,
+then compiles the selected W8A8 kernels ahead of time. Activation quantization
+uses the existing prefill kernel. The original bundle and generator defaults
+are unchanged.
+
+```sh
+uv run python scripts/verify_w8a8.py \
+  --baseline out/qwen38-dspine --out out/verify-w8a8
+uv run python scripts/verify_w8a8_check.py \
+  --kern ../kern/target/release/kern --config out/qwen38-dspine/kern.toml \
+  --baseline out/qwen38-dspine/model.json --baseline-kernels out/qwen38-dspine/kernels \
+  --candidate out/verify-w8a8/model.json --candidate-kernels out/verify-w8a8/kernels \
+  --out out/verify-w8a8/numerics
+```
+
+On one RTX PRO 5000 72GB, the November 10 service workload's 157 scenarios
+(261,672 calls, 16 samples each) cost 26,673.647 GPU seconds on the baseline
+and 25,153.260 seconds on the candidate: **5.70% less GPU time**. Round cost
+fell 0.305%/1.663%/8.021%/15.476%/19.554% in sequence buckets 1/2/4/8/16;
+unchanged prefill cost increased 0.090%.
+
+Batch-1 model probes used one repeated prose prompt at four prefix lengths
+(128/1,024/8,192/32,768), four rounds each. All emitted prefixes and accepted
+counts matched, 52 output tokens per side. Twelve rounds had identical
+proposals, allowing 192 verification-logit rows to be scored: mean KL 0.001537,
+maximum row KL 0.011344. Six top-1 changes were beyond the accepted prefix.
+The default 0.01 maximum-row KL gate fails; the observed numerical difference
+was explicitly accepted for this experiment. The checker retains its original
+threshold. Larger-batch model quality and loaded-service acceptance have not
+been validated.
+
+The measured outcomes are in `results/verify-w8a8.json`; selected Triton
+configurations and synthetic operator errors are in
+`results/verify-w8a8-tuning.json`. These measurements support the experiment;
+they do not establish a general request-throughput improvement.

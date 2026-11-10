@@ -50,7 +50,7 @@ def linear(n, k, rows_per_seq, tuning, dsl, module):
     return {"params": list(PARAMS), "impl": {"launches": launches}}
 
 
-def prefill_linear(n, k, tuning, dsl, module):
+def prefill_linear(n, k, tuning, dsl, module, buckets=(32, 64, 128, 256, 512, 1024)):
     q_meta = dsl["fp8_act_quant"]
     launches = [
         {
@@ -72,7 +72,6 @@ def prefill_linear(n, k, tuning, dsl, module):
         }
     ]
     lower = 1
-    buckets = (32, 64, 128, 256, 512, 1024)
     for idx, rows in enumerate(buckets):
         chosen = tuning[f"{rows},{n},{k}"]
         meta = dsl[chosen["module"]]
