@@ -277,3 +277,52 @@ runs; the total result is reported without normalizing that drift. This
 candidate excludes the W8A8-MLP and native FP8-prefill experiments above.
 Portable results, resources, operator samples and round evidence are retained
 in `results/replayssm-spill.json`; raw artifacts are in `out/replay-spill/`.
+
+## Native FP8 verification attention — 2026-11-11
+
+`scripts/verify_fp8.py` builds independent attention candidates from the served
+bundle, including BF16-query controls for split-count comparisons:
+
+```sh
+uv run python scripts/verify_fp8.py \
+  --baseline out/qwen38-dspine --out out/verify-fp8 --splits 8 16 32 64
+uv run python scripts/verify_attention_check.py \
+  --baseline out/qwen38-dspine --bundle out/verify-fp8/splits-8 \
+  --rms-limit 0.04 --out out/verify-fp8/operator.json
+```
+
+Native FP8 uses per-query-head scales and six 16-packed-query tiles per
+sequence/partition. The shared wrapper indexes queries by request and tile,
+and scales each partial output before the unchanged merge. Invalid split
+blocks exit before accessing query data. Compiled ABI metadata is shared with
+the prefill builder. The unpartitioned prefill wrapper was regression checked.
+No original manifest module or prefill/decode program changes in this candidate.
+
+A global split limit of **8** balances the measured shapes. Four splits helps
+large batches slightly but loses single-sequence parallelism; 16/32/64 usually
+cost more in the native path. There is no batch/context dispatch policy.
+On one RTX PRO 5000 72GB, the complete November 10 workload (157 scenarios,
+261,672 weighted calls, 16 samples) costs **25,717.894 GPU seconds**, versus
+26,673.647 on the original baseline: **3.58% less total GPU time**. Verification
+attention call time, including Q quantization and merge, falls **35.00%**;
+round time falls **5.88%**. Unchanged prefill is 0.39% slower between runs.
+
+Numerical qualification is explicit: native FP8 fails the former BF16
+atol=0.002/rtol=0.02 elementwise test on short KV (max absolute error 0.02197).
+The checker keeps that default and accepts an explicit `--rms-limit` for
+quantized experiments. The 4% RMS limit here was chosen after characterizing
+errors around 1.9–3.3%; it is not a pass of the original elementwise gate.
+The first causal query with one visible key must match scaled V exactly.
+BF16 split controls pass the original elementwise gate.
+
+The unchanged 0.01 per-row full-model KL gate passes: 16 real rounds emit
+identical accepted prefixes (52 tokens each), with 208 comparable logits rows,
+mean KL 0.000913 and max row KL 0.005335. Two top-1 changes are outside accepted
+prefixes. Four 256-token free-running cases use 339 baseline rounds versus 343
+candidate rounds, with mixed per-prompt acceptance changes and all outputs
+diverging. This does not establish broad quality or loaded-service throughput.
+
+Results and split curves are in `results/verify-attention-fp8.json`; raw files
+are under `out/verify-fp8/` and `out/verify-bf16/`. Prior MLP, prefill and replay
+optimizations are excluded; combination is deferred until optimization work
+ends. The original generator defaults and deployed bundle remain unchanged.

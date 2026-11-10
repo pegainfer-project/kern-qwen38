@@ -54,12 +54,17 @@ calls plus merges totaled 3.16ms per round. Earlier real-traffic traces at
 32768–34904 KV tokens measured 83.59ms total and 45.64ms target attention. These
 are different prompts and KV ranges, not a controlled before/after speedup.
 
-To reproduce the operator check, preserve the previous bundle as
-`out/qwen38-dspine-triton` before regenerating, then run with a local kern wheel:
+These measurements use the checker at revision `7ad426a`, which expects the
+previous bundle at `out/qwen38-dspine-triton`. With that revision and a local
+kern wheel, the historical command is:
 
 ```sh
 uv run --with /path/to/kern_llm.whl scripts/verify_attention_check.py
 ```
+
+The current checker compares the served shared operator using independent
+baseline/candidate split plans. Current native FP8 commands and numerical
+qualification are documented in [DSpine](../docs/dspine.md).
 
 This change does not establish long-run quality, a 262K context gate or a broad
 coding benchmark. GPU KV cache is lost when the service restarts.

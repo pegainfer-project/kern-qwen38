@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Exercise AOT FlashInfer verification against the previous Triton kernel."""
+"""Compare complete verification attention operators with independent split plans."""
 
 import argparse
 import copy
 import json
+import shutil
+import statistics
 import tempfile
 from pathlib import Path
 
@@ -14,25 +16,46 @@ from kern.host import host_region, region
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def check(bundle, baseline, out):
+def check(bundle, baseline, out, rms_limit=None):
+    if rms_limit is not None and not 0 < rms_limit < 1:
+        raise ValueError("rms-limit must be finite and between zero and one")
     torch.manual_seed(204)
     candidate = json.loads((bundle / "model.json").read_text())
     original = json.loads((baseline / "model.json").read_text())
-    old = copy.deepcopy(
-        next(c for c in original["programs"]["round"]["calls"] if c["op"] == "verify_attention")
-    )
-    new = copy.deepcopy(
-        next(c for c in candidate["programs"]["round"]["calls"] if c["op"] == "verify_attention_flashinfer")
-    )
-    plan = copy.deepcopy(candidate["programs"]["round"]["calls"][:2])
-    used = {a["buf"] for c in [old, new, *plan] for a in c["args"] if "buf" in a}
-    ops = {c["op"]: candidate["ops"].get(c["op"], original["ops"].get(c["op"])) for c in [old, new, *plan]}
-    names = {l["module"] for op in ops.values() for l in op["impl"]["launches"]}
-    modules = {n: candidate["modules"].get(n, original["modules"].get(n)) for n in names}
+    used, ops, modules, programs = set(), {}, {}, {}
+    stores = {}
+    for side, source, directory in [("baseline", original, baseline), ("candidate", candidate, bundle)]:
+        calls = copy.deepcopy(source["programs"]["round"]["calls"][:2])
+        attention = copy.deepcopy(
+            next(c for c in source["programs"]["round"]["calls"] if c["op"] == "verify_attention_flashinfer")
+        )
+        for call in [*calls, attention]:
+            used.update(a["buf"] for a in call["args"] if "buf" in a)
+            name = call["op"]
+            renamed = side + "." + name
+            if renamed not in ops:
+                op = copy.deepcopy(source["ops"][name])
+                for launch in op["impl"]["launches"]:
+                    old_name = launch["module"]
+                    new_name = side + "." + old_name
+                    record = copy.deepcopy(source["modules"][old_name])
+                    stores[new_name] = directory / "kernels" / record["source"]
+                    record["source"] = new_name + ".cubin"
+                    modules[new_name] = record
+                    launch["module"] = new_name
+                ops[renamed] = op
+            call["op"] = renamed
+        programs[side + ".plan"] = {"calls": calls}
+        programs[side] = {"calls": [attention]}
     buffers = {
         n: {
             "dtype": candidate["buffers"][n]["dtype"],
-            "shape": candidate["buffers"][n]["shape"],
+            "shape": [
+                max(a, b) if isinstance(a, int) else a
+                for a, b in zip(
+                    original["buffers"][n]["shape"], candidate["buffers"][n]["shape"], strict=True
+                )
+            ],
             "kind": "carry"
             if n.startswith(("plan.", "verify.attn."))
             else "workspace"
@@ -57,12 +80,16 @@ def check(bundle, baseline, out):
         },
         "modules": modules,
         "ops": ops,
-        "programs": {"plan": {"calls": plan}, "baseline": {"calls": [old]}, "candidate": {"calls": [new]}},
+        "programs": programs,
     }
     with tempfile.TemporaryDirectory() as td:
         path = Path(td) / "model.json"
         path.write_text(json.dumps(m))
-        rt = kern.Runtime(str(path), str(ROOT / "build/sm_120"), [], 0)
+        kernels = Path(td) / "kernels"
+        kernels.mkdir()
+        for name, source in stores.items():
+            shutil.copyfile(source, kernels / modules[name]["source"])
+        rt = kern.Runtime(str(path), str(kernels), [], 0)
     views = {n: region(rt, m, n) for n in buffers}
     cases = []
     for batch, length in [
@@ -77,6 +104,10 @@ def check(bundle, baseline, out):
         (3, 1025),
         (8, 8193),
         (16, 4097),
+        (4, 32768),
+        (8, 32768),
+        (16, 32768),
+        (16, 131072),
     ]:
         pages = (length + 63) // 64
         cache = torch.zeros((pages + 1, 16, 2, 4, 64, 256), device="cuda", dtype=torch.uint8)
@@ -91,16 +122,27 @@ def check(bundle, baseline, out):
         views["q"][: batch * 16].normal_()
         variables = {"seqs": batch, "tokens": batch * 16}
         torch.cuda.synchronize()
-        rt.run("plan", variables)
+        rt.run("baseline.plan", variables)
         rt.run("baseline", variables)
         ref = views["attn.out"][: batch * 16].clone()
+        rt.run("candidate.plan", variables)
         rt.run("candidate", variables)
         actual = views["attn.out"][: batch * 16].clone()
         assert actual.isfinite().all(), (batch, length, "non-finite output")
         error = (actual.float() - ref.float()).abs()
-        torch.testing.assert_close(actual, ref, atol=0.002, rtol=0.02)
-        times = {}
+        relative_rms = float(error.square().mean().sqrt() / ref.float().square().mean().sqrt())
+        if rms_limit is None:
+            torch.testing.assert_close(actual, ref, atol=0.002, rtol=0.02)
+        elif relative_rms > rms_limit:
+            raise AssertionError(
+                f"Relative RMS {relative_rms} exceeds {rms_limit}: batch={batch}, KV={length}"
+            )
+        if batch == 1 and length == 16:
+            # The first causal query sees one key, so its output is exactly the scaled V.
+            torch.testing.assert_close(actual[0], ref[0], atol=0, rtol=0)
+        graphs = {}
         for name in ("baseline", "candidate"):
+            rt.run(name + ".plan", variables)
             stream = torch.cuda.Stream()
             graph = torch.cuda.CUDAGraph()
             with torch.cuda.stream(stream):
@@ -108,34 +150,42 @@ def check(bundle, baseline, out):
             stream.synchronize()
             with torch.cuda.graph(graph, stream=stream):
                 rt.enqueue_after(name, variables, stream.cuda_stream)
-            graph.replay()
-            torch.cuda.synchronize()
-            start, end = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
-            start.record()
-            for _ in range(30):
-                graph.replay()
-            end.record()
-            end.synchronize()
-            times[name] = start.elapsed_time(end) / 30
+            graphs[name] = graph
+        samples = {"baseline": [], "candidate": []}
+        flush = torch.empty(128 * 1024 * 1024, device="cuda", dtype=torch.uint8)
+        start, end = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
+        for trial in range(12):
+            for name in ("baseline", "candidate") if trial % 2 == 0 else ("candidate", "baseline"):
+                rt.run(name + ".plan", variables)
+                flush.fill_(trial)
+                start.record()
+                graphs[name].replay()
+                end.record()
+                end.synchronize()
+                samples[name].append(start.elapsed_time(end))
+        times = {name: statistics.median(values) for name, values in samples.items()}
         case = {
             "batch": batch,
             "length": length,
             "max_abs_error": error.max().item(),
             "baseline_ms": times["baseline"],
-            "flashinfer_ms": times["candidate"],
+            "candidate_ms": times["candidate"],
+            "relative_rms": relative_rms,
+            "samples_ms": samples,
             "speedup": times["baseline"] / times["candidate"],
         }
         cases.append(case)
         print(json.dumps(case), flush=True)
-        del cache, values, ref, actual, graph
+        del cache, values, ref, actual, graph, graphs, flush
         torch.cuda.empty_cache()
     out.write_text(json.dumps(cases, indent=2) + "\n")
 
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--bundle", type=Path, default=ROOT / "out/qwen38-dspine-flashinfer")
-    p.add_argument("--baseline", type=Path, default=ROOT / "out/qwen38-dspine-triton")
+    p.add_argument("--bundle", type=Path, default=ROOT / "out/verify-fp8/splits-16")
+    p.add_argument("--baseline", type=Path, default=ROOT / "out/qwen38-dspine")
     p.add_argument("--out", type=Path, default=ROOT / "out/verify-attention-check.json")
+    p.add_argument("--rms-limit", type=float, help="Explicit relative RMS gate for quantized candidates")
     args = p.parse_args()
-    check(args.bundle, args.baseline, args.out)
+    check(args.bundle, args.baseline, args.out, args.rms_limit)

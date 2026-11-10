@@ -12,17 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def build(baseline, out):
-    out.mkdir(parents=True, exist_ok=False)
-    kernels = out / "kernels"
-    shutil.copytree(baseline / "kernels", kernels)
-    m = json.loads((baseline / "model.json").read_text())
-    if (
-        m["buffers"]["q"]["dtype"] != "bf16"
-        or m["buffers"]["q"]["shape"] != ["tokens", 6144]
-        or m["states"]["kv"].get("bytes_per_token") != 32768
-    ):
-        raise ValueError("Expected Qwen3.8 BF16 queries and the calibrated FP8 KV layout")
+def compile_native(kernels, out):
     path = kernels / "prefill_fp8.cubin"
     subprocess.run(
         [
@@ -62,10 +52,23 @@ def build(baseline, out):
     original_size, size, scale_at, shared = map(
         int, subprocess.check_output([str(out / "metadata")], text=True).split()
     )
-    m["modules"]["prefill_fp8"] = {
-        "source": path.name,
-        "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
-    }
+    module = {"source": path.name, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+    return module, (original_size, size, scale_at, shared)
+
+
+def build(baseline, out):
+    out.mkdir(parents=True, exist_ok=False)
+    kernels = out / "kernels"
+    shutil.copytree(baseline / "kernels", kernels)
+    m = json.loads((baseline / "model.json").read_text())
+    if (
+        m["buffers"]["q"]["dtype"] != "bf16"
+        or m["buffers"]["q"]["shape"] != ["tokens", 6144]
+        or m["states"]["kv"].get("bytes_per_token") != 32768
+    ):
+        raise ValueError("Expected Qwen3.8 BF16 queries and the calibrated FP8 KV layout")
+    module, (original_size, size, scale_at, shared) = compile_native(kernels, out)
+    m["modules"]["prefill_fp8"] = module
     tiles = {"ceil_div": [{"mul": ["tokens", 6]}, 16]}
     maximum = m["vars"]["tokens"]["max"]
     for name in ("plan.request", "plan.tile", "plan.zero"):
