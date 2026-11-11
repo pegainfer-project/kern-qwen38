@@ -378,3 +378,57 @@ and `long-32768` (`41.30 -> 37.13 ms/round`, `-10.1%`). Portable evidence is in
 `results/dspine-attention.json`; raw files are under `out/dspine-attention/`.
 Prior MLP, prefill, ReplaySSM and verification-attention optimizations remain
 excluded.
+
+
+## Combined optimization ablation and batch-gated deployment — 2026-11-11
+
+`scripts/build_combined.py` composes any subset of the five isolated SM120
+optimizations directly from repository sources and committed tuning profiles:
+verification W8A8 MLPs (`verify-w8a8`), native FP8 prefill attention
+(`prefill-fp8`), zero-spill ReplaySSM verify (`replay-spill`), native FP8
+split-8 verification attention (`verify-fp8`), and GQA-packed split-8 draft
+attention (`dspine-attention`).
+
+```sh
+uv run python scripts/build_combined.py \
+  --baseline out/qwen38-dspine --out out/qwen38-dspine-2026-11-11 \
+  --w8a8-min-seqs 2 --kern ../kern/target/release/kern
+```
+
+Enabling all five unconditionally (`--w8a8-min-seqs 1`, manifest SHA-256
+`03b3d6e4ac68a16a02a437e91086523db78dfe8565642c1b4d2573c407b750b6`) reduces
+complete November 10 workload cost by **18.60%** (`26,673.647 -> 21,711.427 s`,
+`1.2286x` fixed-work speedup; prefill `-8.76%`, round `-24.29%`, batch 16
+`-33.24%`) and passes the 768-position teacher-forced `e2e-logits` gate
+(`mean KL = 0.00150 <= 0.01`).
+
+Leave-one-out numerical and speculative-round ablations over 16 controlled
+rounds (128/1k/8k/32k prefixes) and four 256-token free-running prompts isolate
+their interaction:
+- `lossless2` (`replay-spill + dspine-attention`): 52/52 accepted tokens,
+  mean KL `0.000604`, max row KL `0.003515 <= 0.01` (pass), 356 free-running
+  rounds (`long` generation time `-8.07%`), demonstrating that `±15`-round
+  swings across four greedy 256-token prompts reflect tie-flip trajectory
+  changes rather than systematic acceptance loss.
+- `no-prefill-fp8` (excluding only `prefill-fp8`): 50/52 accepted tokens
+  (15/16 identical prefixes), mean KL `0.001751` over 226 comparable causal
+  rows, and 225/226 rows `<= 0.01` (one non-flip row at `0.01931`), showing
+  that the `0.044–0.046` max-row KL in `all5` and `no-w8a8` arises from
+  comparing FP8-Q prefilled KV/GDN prefix states against BF16-Q prefill rather
+  than verification operator instability.
+
+Because `verify-w8a8` saves only `0.31%` at batch 1 (`M=16`, weight-bandwidth
+bound) while contributing over `99%` of its throughput reduction across batches
+2–16, the deployed bundle (`out/qwen38-dspine-2026-11-11`, manifest SHA-256
+`8eb0ea4b576ba696b59ba1af1d296bc82d47374fac5334a61fa78f976096fdcf`, snapshot
+`manifests/qwen38-dspine-sm120-2026-11-11.json`) retains the baseline BF16-dot
+verification MLPs for `seqs == 1` (`tokens <= 16`) and dispatches W8A8 for
+`seqs >= 2` (`--w8a8-min-seqs 2`):
+- Complete 157-scenario workload: **21,787.521 GPU seconds** vs 26,673.647
+  baseline (**18.32% reduction**, `1.2243x` fixed-work speedup; prefill
+  `-8.62%`, round `-23.92%`, batch 1 `-15.42%`, batch 16 `-33.15%`).
+- Teacher-forced `e2e-logits`: **PASS**, mean KL `0.00150 <= 0.01` (768 rows).
+- Isolated 16-way concurrent HTTP serving gate (`scripts/http_check.py`):
+  **PASS** (`queued_requests_match=true`, `mixed_sampling_requests=16`, SSE and
+  chat verified across singleton BF16 and concurrent batched W8A8 execution).
+- Portable evidence is in `results/combined-ablation.json`.

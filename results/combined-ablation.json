@@ -1,0 +1,841 @@
+{
+  "date": "2026-11-11",
+  "baseline_manifest_sha256": "ae10b8f7e722dcbc73dafe731d7261eadeae9f4f8f6913fbb192d0ea1f1e8253",
+  "deployed_manifest_sha256": "8eb0ea4b576ba696b59ba1af1d296bc82d47374fac5334a61fa78f976096fdcf",
+  "runner_sha256": "793280f133dd99cc045788ac3d2a3a4c9242f5b17925b98a07421a36424bbd17",
+  "deployed_candidate": {
+    "name": "all5-w8a8-batch2plus",
+    "bundle": "out/qwen38-dspine-2026-11-11",
+    "eval": {
+      "combine_meta": {
+        "enabled": [
+          "verify-w8a8",
+          "prefill-fp8",
+          "replay-spill",
+          "verify-fp8",
+          "dspine-attention"
+        ],
+        "disabled": [],
+        "w8a8_min_seqs": 2,
+        "w8a8_ops": [
+          "verify_linear_34816_5120",
+          "verify_linear_5120_17408"
+        ],
+        "baseline_manifest_sha256": "ae10b8f7e722dcbc73dafe731d7261eadeae9f4f8f6913fbb192d0ea1f1e8253",
+        "source_manifest_sha256": {
+          "verify-w8a8": "b00dfee21bc50437ca9ffca2b5b2fd523c80422136f95f5cbdf9affae3e99316",
+          "prefill-fp8": "8719e55937131346c4ddcf2a280e4a935f5c7ab5836c5ac42aada630cc1aef2e",
+          "replay-spill": "2061fb396ce8a01cf006a86581dfc6715189115dcd7b27c60438f63211d65311",
+          "verify-fp8": "e52272026478dbfabe714f98c4addd5596597379ea795a3e8255f3941b189daa",
+          "dspine-attention": "efa3f02e933d1e27197d059e08349a5d3a44fa778294b5086d13c06f43d2a6dd"
+        },
+        "candidate_manifest_sha256": "8eb0ea4b576ba696b59ba1af1d296bc82d47374fac5334a61fa78f976096fdcf",
+        "module_count": 60,
+        "kern_verify_output": "\u001b[32m INFO\u001b[0m out/combined-ablation/all5-w8a8-batch2plus/model.json: `qwen3.8-27b-fp8-dspine` schema v7, verified\n  rows      `tokens` <= 1024\n  groups    `seqs` <= 16\n  fill      count       `accepted` i32 [seqs]\n  fill      seq_len     `lengths` i32 [seqs]\n  fill      min_p       `min_p` f32 [seqs]\n  fill      tokens      `next_token` i64 [seqs]\n  fill      position    `positions` i64 [tokens]\n  fill      cu_seqlens  `q_indptr` i32 [17]\n  fill      seed        `seed` i64 [seqs]\n  fill      slot        `slots` i64 [tokens]\n  fill      temperature `temperature` f32 [seqs]\n  fill      token       `token_ids` i64 [tokens]\n  fill      top_k       `top_k` i32 [seqs]\n  fill      top_p       `top_p` f32 [seqs]\n  fill      tokens      `verify_tokens` i64 [seqs] x 16\n  pages     `pages` [seqs, 4097]\n  lines     `d.lines` [1, seqs]\n  lines     `gdn.lines` [48, seqs]\n  forward   `decode`: <= 1 sequences of 1 rows, hands back `next_token`\n  forward   `decode_batch`: <= 16 sequences of 1 rows, hands back `next_token`\n  forward   `prefill`: <= 1 sequences of rows as fed, hands back `next_token`\n  forward   `round`: <= 16 sequences of 16 rows, hands back `verify_tokens` counted by `accepted`\n  once      `load`"
+      },
+      "e2e_logits": {
+        "exit_code": 0,
+        "passed": true,
+        "elapsed_seconds": 39.14,
+        "verdict": "PASS      mean KL 1.50e-3 \u2264 1.00e-2 over 768 scored positions   38.7s"
+      },
+      "workload_benchmark": {
+        "wall_seconds": 428.65,
+        "calls": 261672,
+        "baseline_cost_seconds": 26673.646806647983,
+        "candidate_cost_seconds": 21787.521489121995,
+        "saved_seconds": 4886.125317525988,
+        "cost_reduction_percent": 18.31817506224233,
+        "fixed_work_speedup_x": 1.22426255872957,
+        "programs": {
+          "prefill": {
+            "baseline_seconds": 9770.259218745501,
+            "candidate_seconds": 8928.196051968996,
+            "saved_seconds": 842.0631667765047,
+            "reduction_percent": 8.61863690536376
+          },
+          "round": {
+            "baseline_seconds": 16903.387587902496,
+            "candidate_seconds": 12859.325437153004,
+            "saved_seconds": 4044.0621507494925,
+            "reduction_percent": 23.92456618366704
+          }
+        },
+        "sequence_buckets": {
+          "prefill": {
+            "calls": 29908,
+            "baseline_seconds": 9770.259218745501,
+            "candidate_seconds": 8928.196051968996,
+            "saved_seconds": 842.0631667765047,
+            "reduction_percent": 8.61863690536376
+          },
+          "round_batch_1": {
+            "calls": 96851,
+            "baseline_seconds": 4256.853176800001,
+            "candidate_seconds": 3600.3814884544995,
+            "saved_seconds": 656.4716883455017,
+            "reduction_percent": 15.421525269494737
+          },
+          "round_batch_2": {
+            "calls": 51655,
+            "baseline_seconds": 2867.535850415,
+            "candidate_seconds": 2375.548279347,
+            "saved_seconds": 491.98757106799985,
+            "reduction_percent": 17.157155018543104
+          },
+          "round_batch_4": {
+            "calls": 38454,
+            "baseline_seconds": 2856.2848796275,
+            "candidate_seconds": 2198.856173028,
+            "saved_seconds": 657.4287065995,
+            "reduction_percent": 23.01691652988192
+          },
+          "round_batch_8": {
+            "calls": 24061,
+            "baseline_seconds": 2802.2669636045,
+            "candidate_seconds": 1930.110811549,
+            "saved_seconds": 872.1561520554999,
+            "reduction_percent": 31.12323570105765
+          },
+          "round_batch_16": {
+            "calls": 20743,
+            "baseline_seconds": 4120.4467174555,
+            "candidate_seconds": 2754.4286847745,
+            "saved_seconds": 1366.018032681,
+            "reduction_percent": 33.15218291487961
+          }
+        },
+        "operator_families": {
+          "dspine_attention": {
+            "baseline_seconds": 1450.880660547501,
+            "candidate_seconds": 218.33052800250002,
+            "saved_seconds": 1232.5501325450011,
+            "reduction_percent": 84.95186172513243
+          },
+          "other_untouched_ops": {
+            "baseline_seconds": 10801.774559328618,
+            "candidate_seconds": 10932.502062691101,
+            "saved_seconds": -130.72750336248282,
+            "reduction_percent": -1.2102409899823734
+          },
+          "prefill_attention_and_plan": {
+            "baseline_seconds": 4207.536148866984,
+            "candidate_seconds": 3296.2322584894937,
+            "saved_seconds": 911.3038903774905,
+            "reduction_percent": 21.658848745075872
+          },
+          "replay_verify": {
+            "baseline_seconds": 1276.4232495475,
+            "candidate_seconds": 1004.708196034997,
+            "saved_seconds": 271.7150535125031,
+            "reduction_percent": 21.287222213229647
+          },
+          "verify_attention_family": {
+            "baseline_seconds": 3173.6553343630007,
+            "candidate_seconds": 2068.6974250440057,
+            "saved_seconds": 1104.957909318995,
+            "reduction_percent": 34.81656931535624
+          },
+          "verify_linear_34816_5120": {
+            "baseline_seconds": 3531.9573742074967,
+            "candidate_seconds": 2583.2074871144987,
+            "saved_seconds": 948.749887092998,
+            "reduction_percent": 26.8618725135628
+          },
+          "verify_linear_5120_17408": {
+            "baseline_seconds": 2156.3509780760037,
+            "candidate_seconds": 1599.8197595270087,
+            "saved_seconds": 556.531218548995,
+            "reduction_percent": 25.808934825886176
+          }
+        }
+      }
+    },
+    "batch1_round_probes_from_equivalent_no_w8a8": {
+      "round_logits_probe": {
+        "elapsed_seconds": 61.2,
+        "total_rounds": 16,
+        "rounds_same_accepted_tokens": 6,
+        "baseline_total_accepted": 52,
+        "candidate_total_accepted": 43,
+        "scored_rounds": 1,
+        "scored_rows": 16,
+        "mean_kl": 0.01108718104660511,
+        "max_row_kl": 0.043789830058813095,
+        "rows_over_0_01_kl": 5,
+        "passes_0_01_per_row_gate": false,
+        "top1_flips": 3,
+        "flips_before_accepted_boundary": 1,
+        "causal_prefix_scored_rows": 78,
+        "causal_prefix_mean_kl": 0.00642862065265385,
+        "causal_prefix_max_kl": 0.043789830058813095,
+        "causal_prefix_rows_over_0_01_kl": 16
+      },
+      "free_running_rounds": {
+        "elapsed_seconds": 56.2,
+        "baseline_total_rounds": 339,
+        "candidate_total_rounds": 357,
+        "identical_sequences": 0,
+        "cases": [
+          {
+            "source": "code",
+            "prompt_tokens": 65,
+            "identical_output": false,
+            "baseline_rounds": 62,
+            "candidate_rounds": 83,
+            "baseline_ms_per_round": 33.58,
+            "candidate_ms_per_round": 32.62,
+            "baseline_draft_take": 21.4,
+            "candidate_draft_take": 14.7
+          },
+          {
+            "source": "chinese",
+            "prompt_tokens": 65,
+            "identical_output": false,
+            "baseline_rounds": 91,
+            "candidate_rounds": 81,
+            "baseline_ms_per_round": 33.62,
+            "candidate_ms_per_round": 32.64,
+            "baseline_draft_take": 12.0,
+            "candidate_draft_take": 14.3
+          },
+          {
+            "source": "long-8192",
+            "prompt_tokens": 7797,
+            "identical_output": false,
+            "baseline_rounds": 89,
+            "candidate_rounds": 97,
+            "baseline_ms_per_round": 38.86,
+            "candidate_ms_per_round": 33.44,
+            "baseline_draft_take": 12.5,
+            "candidate_draft_take": 11.1
+          },
+          {
+            "source": "long-32768",
+            "prompt_tokens": 31002,
+            "identical_output": false,
+            "baseline_rounds": 97,
+            "candidate_rounds": 96,
+            "baseline_ms_per_round": 41.18,
+            "candidate_ms_per_round": 34.68,
+            "baseline_draft_take": 11.0,
+            "candidate_draft_take": 11.2
+          }
+        ]
+      }
+    },
+    "http_16way_check": {
+      "model": "Qwen/Qwen3.8-27B-FP8",
+      "completion_matches_cli": true,
+      "queued_requests_match": true,
+      "concurrent_requests": 16,
+      "sse_matches": true,
+      "chat_response": "hello",
+      "same_seed_equal": true,
+      "different_seed_changed": true,
+      "mixed_sampling_requests": 16,
+      "sampled_sse": true
+    }
+  },
+  "ablations": {
+    "all5": {
+      "combine_meta": {
+        "enabled": [
+          "verify-w8a8",
+          "prefill-fp8",
+          "replay-spill",
+          "verify-fp8",
+          "dspine-attention"
+        ],
+        "disabled": [],
+        "baseline_manifest_sha256": "ae10b8f7e722dcbc73dafe731d7261eadeae9f4f8f6913fbb192d0ea1f1e8253",
+        "source_manifest_sha256": {
+          "verify-w8a8": "b00dfee21bc50437ca9ffca2b5b2fd523c80422136f95f5cbdf9affae3e99316",
+          "prefill-fp8": "8719e55937131346c4ddcf2a280e4a935f5c7ab5836c5ac42aada630cc1aef2e",
+          "replay-spill": "2061fb396ce8a01cf006a86581dfc6715189115dcd7b27c60438f63211d65311",
+          "verify-fp8": "e52272026478dbfabe714f98c4addd5596597379ea795a3e8255f3941b189daa",
+          "dspine-attention": "efa3f02e933d1e27197d059e08349a5d3a44fa778294b5086d13c06f43d2a6dd"
+        },
+        "candidate_manifest_sha256": "03b3d6e4ac68a16a02a437e91086523db78dfe8565642c1b4d2573c407b750b6",
+        "module_count": 62,
+        "kern_verify_output": "\u001b[32m INFO\u001b[0m out/combined-ablation/all5/model.json: `qwen3.8-27b-fp8-dspine` schema v7, verified\n  rows      `tokens` <= 1024\n  groups    `seqs` <= 16\n  fill      count       `accepted` i32 [seqs]\n  fill      seq_len     `lengths` i32 [seqs]\n  fill      min_p       `min_p` f32 [seqs]\n  fill      tokens      `next_token` i64 [seqs]\n  fill      position    `positions` i64 [tokens]\n  fill      cu_seqlens  `q_indptr` i32 [17]\n  fill      seed        `seed` i64 [seqs]\n  fill      slot        `slots` i64 [tokens]\n  fill      temperature `temperature` f32 [seqs]\n  fill      token       `token_ids` i64 [tokens]\n  fill      top_k       `top_k` i32 [seqs]\n  fill      top_p       `top_p` f32 [seqs]\n  fill      tokens      `verify_tokens` i64 [seqs] x 16\n  pages     `pages` [seqs, 4097]\n  lines     `d.lines` [1, seqs]\n  lines     `gdn.lines` [48, seqs]\n  forward   `decode`: <= 1 sequences of 1 rows, hands back `next_token`\n  forward   `decode_batch`: <= 16 sequences of 1 rows, hands back `next_token`\n  forward   `prefill`: <= 1 sequences of rows as fed, hands back `next_token`\n  forward   `round`: <= 16 sequences of 16 rows, hands back `verify_tokens` counted by `accepted`\n  once      `load`"
+      },
+      "e2e_logits": {
+        "exit_code": 0,
+        "passed": true,
+        "elapsed_seconds": 39.41,
+        "verdict": "PASS      mean KL 1.50e-3 \u2264 1.00e-2 over 768 scored positions   38.9s"
+      },
+      "round_logits_probe": {
+        "elapsed_seconds": 59.65,
+        "total_rounds": 16,
+        "rounds_same_accepted_tokens": 6,
+        "baseline_total_accepted": 52,
+        "candidate_total_accepted": 43,
+        "scored_rounds": 1,
+        "scored_rows": 16,
+        "mean_kl": 0.01247449405491352,
+        "max_row_kl": 0.04315069690346718,
+        "rows_over_0_01_kl": 7,
+        "passes_0_01_per_row_gate": false,
+        "top1_flips": 3,
+        "flips_before_accepted_boundary": 1,
+        "causal_prefix_scored_rows": 78,
+        "causal_prefix_mean_kl": 0.007952221577467684,
+        "causal_prefix_max_kl": 0.04594092443585396,
+        "causal_prefix_rows_over_0_01_kl": 18
+      },
+      "free_running_rounds": {
+        "elapsed_seconds": 56.13,
+        "baseline_total_rounds": 339,
+        "candidate_total_rounds": 355,
+        "identical_sequences": 0,
+        "cases": [
+          {
+            "source": "code",
+            "prompt_tokens": 65,
+            "identical_output": false,
+            "baseline_rounds": 62,
+            "candidate_rounds": 72,
+            "baseline_ms_per_round": 33.58,
+            "candidate_ms_per_round": 32.72,
+            "baseline_draft_take": 21.4,
+            "candidate_draft_take": 16.9
+          },
+          {
+            "source": "chinese",
+            "prompt_tokens": 65,
+            "identical_output": false,
+            "baseline_rounds": 91,
+            "candidate_rounds": 91,
+            "baseline_ms_per_round": 33.62,
+            "candidate_ms_per_round": 32.62,
+            "baseline_draft_take": 12.0,
+            "candidate_draft_take": 12.0
+          },
+          {
+            "source": "long-8192",
+            "prompt_tokens": 7797,
+            "identical_output": false,
+            "baseline_rounds": 89,
+            "candidate_rounds": 86,
+            "baseline_ms_per_round": 38.86,
+            "candidate_ms_per_round": 33.38,
+            "baseline_draft_take": 12.5,
+            "candidate_draft_take": 13.4
+          },
+          {
+            "source": "long-32768",
+            "prompt_tokens": 31002,
+            "identical_output": false,
+            "baseline_rounds": 97,
+            "candidate_rounds": 106,
+            "baseline_ms_per_round": 41.18,
+            "candidate_ms_per_round": 34.5,
+            "baseline_draft_take": 11.0,
+            "candidate_draft_take": 9.4
+          }
+        ]
+      },
+      "workload_benchmark": {
+        "wall_seconds": 429.16,
+        "calls": 261672,
+        "baseline_cost_seconds": 26673.646806647983,
+        "candidate_cost_seconds": 21711.426852878005,
+        "saved_seconds": 4962.219953769978,
+        "cost_reduction_percent": 18.603455274564197,
+        "fixed_work_speedup_x": 1.2285533782461746,
+        "programs": {
+          "prefill": {
+            "baseline_seconds": 9770.259218745501,
+            "candidate_seconds": 8914.227015162496,
+            "saved_seconds": 856.032203583005,
+            "reduction_percent": 8.761611994291787
+          },
+          "round": {
+            "baseline_seconds": 16903.387587902496,
+            "candidate_seconds": 12797.199837715503,
+            "saved_seconds": 4106.187750186993,
+            "reduction_percent": 24.292099609227034
+          }
+        },
+        "sequence_buckets": {
+          "prefill": {
+            "calls": 29908,
+            "baseline_seconds": 9770.259218745501,
+            "candidate_seconds": 8914.227015162496,
+            "saved_seconds": 856.032203583005,
+            "reduction_percent": 8.761611994291787
+          },
+          "round_batch_1": {
+            "calls": 96851,
+            "baseline_seconds": 4256.853176800001,
+            "candidate_seconds": 3548.697200249,
+            "saved_seconds": 708.155976551001,
+            "reduction_percent": 16.635668347935415
+          },
+          "round_batch_2": {
+            "calls": 51655,
+            "baseline_seconds": 2867.535850415,
+            "candidate_seconds": 2372.4384704004997,
+            "saved_seconds": 495.09738001450023,
+            "reduction_percent": 17.265603843901307
+          },
+          "round_batch_4": {
+            "calls": 38454,
+            "baseline_seconds": 2856.2848796275,
+            "candidate_seconds": 2196.8468967635004,
+            "saved_seconds": 659.4379828639994,
+            "reduction_percent": 23.08726232342761
+          },
+          "round_batch_8": {
+            "calls": 24061,
+            "baseline_seconds": 2802.2669636045,
+            "candidate_seconds": 1928.224335622,
+            "saved_seconds": 874.0426279824999,
+            "reduction_percent": 31.190555337320053
+          },
+          "round_batch_16": {
+            "calls": 20743,
+            "baseline_seconds": 4120.4467174555,
+            "candidate_seconds": 2750.9929346804993,
+            "saved_seconds": 1369.453782775001,
+            "reduction_percent": 33.23556586652526
+          }
+        },
+        "operator_families": {
+          "dspine_attention": {
+            "baseline_seconds": 1450.880660547501,
+            "candidate_seconds": 217.82792204849991,
+            "saved_seconds": 1233.0527384990012,
+            "reduction_percent": 84.98650316516722
+          },
+          "other_untouched_ops": {
+            "baseline_seconds": 10801.774559328618,
+            "candidate_seconds": 10904.652169827763,
+            "saved_seconds": -102.8776104991448,
+            "reduction_percent": -0.9524139754453376
+          },
+          "prefill_attention_and_plan": {
+            "baseline_seconds": 4207.536148866984,
+            "candidate_seconds": 3291.1482850404946,
+            "saved_seconds": 916.3878638264896,
+            "reduction_percent": 21.77967892381048
+          },
+          "replay_verify": {
+            "baseline_seconds": 1276.4232495475,
+            "candidate_seconds": 992.6018365449988,
+            "saved_seconds": 283.82141300250123,
+            "reduction_percent": 22.23568186360736
+          },
+          "verify_attention_family": {
+            "baseline_seconds": 3173.6553343630007,
+            "candidate_seconds": 2050.464682425501,
+            "saved_seconds": 1123.1906519374998,
+            "reduction_percent": 35.39107223699011
+          },
+          "verify_linear_34816_5120": {
+            "baseline_seconds": 3531.9573742074967,
+            "candidate_seconds": 2589.6008893049943,
+            "saved_seconds": 942.3564849025024,
+            "reduction_percent": 26.6808566769283
+          },
+          "verify_linear_5120_17408": {
+            "baseline_seconds": 2156.3509780760037,
+            "candidate_seconds": 1580.292370622002,
+            "saved_seconds": 576.0586074540017,
+            "reduction_percent": 26.71451045358061
+          }
+        }
+      }
+    },
+    "no-w8a8": {
+      "combine_meta": {
+        "enabled": [
+          "prefill-fp8",
+          "replay-spill",
+          "verify-fp8",
+          "dspine-attention"
+        ],
+        "disabled": [
+          "verify-w8a8"
+        ],
+        "w8a8_min_seqs": null,
+        "w8a8_ops": null,
+        "baseline_manifest_sha256": "ae10b8f7e722dcbc73dafe731d7261eadeae9f4f8f6913fbb192d0ea1f1e8253",
+        "source_manifest_sha256": {
+          "prefill-fp8": "8719e55937131346c4ddcf2a280e4a935f5c7ab5836c5ac42aada630cc1aef2e",
+          "replay-spill": "2061fb396ce8a01cf006a86581dfc6715189115dcd7b27c60438f63211d65311",
+          "verify-fp8": "e52272026478dbfabe714f98c4addd5596597379ea795a3e8255f3941b189daa",
+          "dspine-attention": "efa3f02e933d1e27197d059e08349a5d3a44fa778294b5086d13c06f43d2a6dd"
+        },
+        "candidate_manifest_sha256": "5de152624b44cca6420d27fda24df8a26dda71260ebc4db186f3cf67b399782b",
+        "module_count": 55,
+        "kern_verify_output": "\u001b[32m INFO\u001b[0m out/combined-ablation/no-w8a8/model.json: `qwen3.8-27b-fp8-dspine` schema v7, verified\n  rows      `tokens` <= 1024\n  groups    `seqs` <= 16\n  fill      count       `accepted` i32 [seqs]\n  fill      seq_len     `lengths` i32 [seqs]\n  fill      min_p       `min_p` f32 [seqs]\n  fill      tokens      `next_token` i64 [seqs]\n  fill      position    `positions` i64 [tokens]\n  fill      cu_seqlens  `q_indptr` i32 [17]\n  fill      seed        `seed` i64 [seqs]\n  fill      slot        `slots` i64 [tokens]\n  fill      temperature `temperature` f32 [seqs]\n  fill      token       `token_ids` i64 [tokens]\n  fill      top_k       `top_k` i32 [seqs]\n  fill      top_p       `top_p` f32 [seqs]\n  fill      tokens      `verify_tokens` i64 [seqs] x 16\n  pages     `pages` [seqs, 4097]\n  lines     `d.lines` [1, seqs]\n  lines     `gdn.lines` [48, seqs]\n  forward   `decode`: <= 1 sequences of 1 rows, hands back `next_token`\n  forward   `decode_batch`: <= 16 sequences of 1 rows, hands back `next_token`\n  forward   `prefill`: <= 1 sequences of rows as fed, hands back `next_token`\n  forward   `round`: <= 16 sequences of 16 rows, hands back `verify_tokens` counted by `accepted`\n  once      `load`"
+      },
+      "round_logits_probe": {
+        "elapsed_seconds": 61.2,
+        "total_rounds": 16,
+        "rounds_same_accepted_tokens": 6,
+        "baseline_total_accepted": 52,
+        "candidate_total_accepted": 43,
+        "scored_rounds": 1,
+        "scored_rows": 16,
+        "mean_kl": 0.01108718104660511,
+        "max_row_kl": 0.043789830058813095,
+        "rows_over_0_01_kl": 5,
+        "passes_0_01_per_row_gate": false,
+        "top1_flips": 3,
+        "flips_before_accepted_boundary": 1,
+        "causal_prefix_scored_rows": 78,
+        "causal_prefix_mean_kl": 0.00642862065265385,
+        "causal_prefix_max_kl": 0.043789830058813095,
+        "causal_prefix_rows_over_0_01_kl": 16
+      },
+      "free_running_rounds": {
+        "elapsed_seconds": 56.2,
+        "baseline_total_rounds": 339,
+        "candidate_total_rounds": 357,
+        "identical_sequences": 0,
+        "cases": [
+          {
+            "source": "code",
+            "prompt_tokens": 65,
+            "identical_output": false,
+            "baseline_rounds": 62,
+            "candidate_rounds": 83,
+            "baseline_ms_per_round": 33.58,
+            "candidate_ms_per_round": 32.62,
+            "baseline_draft_take": 21.4,
+            "candidate_draft_take": 14.7
+          },
+          {
+            "source": "chinese",
+            "prompt_tokens": 65,
+            "identical_output": false,
+            "baseline_rounds": 91,
+            "candidate_rounds": 81,
+            "baseline_ms_per_round": 33.62,
+            "candidate_ms_per_round": 32.64,
+            "baseline_draft_take": 12.0,
+            "candidate_draft_take": 14.3
+          },
+          {
+            "source": "long-8192",
+            "prompt_tokens": 7797,
+            "identical_output": false,
+            "baseline_rounds": 89,
+            "candidate_rounds": 97,
+            "baseline_ms_per_round": 38.86,
+            "candidate_ms_per_round": 33.44,
+            "baseline_draft_take": 12.5,
+            "candidate_draft_take": 11.1
+          },
+          {
+            "source": "long-32768",
+            "prompt_tokens": 31002,
+            "identical_output": false,
+            "baseline_rounds": 97,
+            "candidate_rounds": 96,
+            "baseline_ms_per_round": 41.18,
+            "candidate_ms_per_round": 34.68,
+            "baseline_draft_take": 11.0,
+            "candidate_draft_take": 11.2
+          }
+        ]
+      }
+    },
+    "no-prefill-fp8": {
+      "combine_meta": {
+        "enabled": [
+          "verify-w8a8",
+          "replay-spill",
+          "verify-fp8",
+          "dspine-attention"
+        ],
+        "disabled": [
+          "prefill-fp8"
+        ],
+        "w8a8_min_seqs": 1,
+        "w8a8_ops": [
+          "verify_linear_34816_5120",
+          "verify_linear_5120_17408"
+        ],
+        "baseline_manifest_sha256": "ae10b8f7e722dcbc73dafe731d7261eadeae9f4f8f6913fbb192d0ea1f1e8253",
+        "source_manifest_sha256": {
+          "verify-w8a8": "b00dfee21bc50437ca9ffca2b5b2fd523c80422136f95f5cbdf9affae3e99316",
+          "replay-spill": "2061fb396ce8a01cf006a86581dfc6715189115dcd7b27c60438f63211d65311",
+          "verify-fp8": "e52272026478dbfabe714f98c4addd5596597379ea795a3e8255f3941b189daa",
+          "dspine-attention": "efa3f02e933d1e27197d059e08349a5d3a44fa778294b5086d13c06f43d2a6dd"
+        },
+        "candidate_manifest_sha256": "8a16db06fe72da6142a2de10c39fe735c7bb215d96d9d28832301f3c3a928744",
+        "module_count": 62,
+        "kern_verify_output": "\u001b[32m INFO\u001b[0m out/combined-ablation/no-prefill-fp8/model.json: `qwen3.8-27b-fp8-dspine` schema v7, verified\n  rows      `tokens` <= 1024\n  groups    `seqs` <= 16\n  fill      count       `accepted` i32 [seqs]\n  fill      seq_len     `lengths` i32 [seqs]\n  fill      min_p       `min_p` f32 [seqs]\n  fill      tokens      `next_token` i64 [seqs]\n  fill      position    `positions` i64 [tokens]\n  fill      cu_seqlens  `q_indptr` i32 [17]\n  fill      seed        `seed` i64 [seqs]\n  fill      slot        `slots` i64 [tokens]\n  fill      temperature `temperature` f32 [seqs]\n  fill      token       `token_ids` i64 [tokens]\n  fill      top_k       `top_k` i32 [seqs]\n  fill      top_p       `top_p` f32 [seqs]\n  fill      tokens      `verify_tokens` i64 [seqs] x 16\n  pages     `pages` [seqs, 4097]\n  lines     `d.lines` [1, seqs]\n  lines     `gdn.lines` [48, seqs]\n  forward   `decode`: <= 1 sequences of 1 rows, hands back `next_token`\n  forward   `decode_batch`: <= 16 sequences of 1 rows, hands back `next_token`\n  forward   `prefill`: <= 1 sequences of rows as fed, hands back `next_token`\n  forward   `round`: <= 16 sequences of 16 rows, hands back `verify_tokens` counted by `accepted`\n  once      `load`"
+      },
+      "round_logits_probe": {
+        "elapsed_seconds": 61.6,
+        "total_rounds": 16,
+        "rounds_same_accepted_tokens": 15,
+        "baseline_total_accepted": 52,
+        "candidate_total_accepted": 50,
+        "scored_rounds": 12,
+        "scored_rows": 192,
+        "mean_kl": 0.001689742265928847,
+        "max_row_kl": 0.019309155642986298,
+        "rows_over_0_01_kl": 1,
+        "passes_0_01_per_row_gate": false,
+        "top1_flips": 4,
+        "flips_before_accepted_boundary": 1,
+        "causal_prefix_scored_rows": 226,
+        "causal_prefix_mean_kl": 0.00175055784592611,
+        "causal_prefix_max_kl": 0.019309155642986298,
+        "causal_prefix_rows_over_0_01_kl": 1
+      },
+      "free_running_rounds": {
+        "elapsed_seconds": 56.86,
+        "baseline_total_rounds": 339,
+        "candidate_total_rounds": 358,
+        "identical_sequences": 0,
+        "cases": [
+          {
+            "source": "code",
+            "prompt_tokens": 65,
+            "identical_output": false,
+            "baseline_rounds": 62,
+            "candidate_rounds": 63,
+            "baseline_ms_per_round": 33.58,
+            "candidate_ms_per_round": 32.64,
+            "baseline_draft_take": 21.4,
+            "candidate_draft_take": 20.3
+          },
+          {
+            "source": "chinese",
+            "prompt_tokens": 65,
+            "identical_output": false,
+            "baseline_rounds": 91,
+            "candidate_rounds": 102,
+            "baseline_ms_per_round": 33.62,
+            "candidate_ms_per_round": 32.64,
+            "baseline_draft_take": 12.0,
+            "candidate_draft_take": 10.0
+          },
+          {
+            "source": "long-8192",
+            "prompt_tokens": 7797,
+            "identical_output": false,
+            "baseline_rounds": 89,
+            "candidate_rounds": 101,
+            "baseline_ms_per_round": 38.86,
+            "candidate_ms_per_round": 33.41,
+            "baseline_draft_take": 12.5,
+            "candidate_draft_take": 10.4
+          },
+          {
+            "source": "long-32768",
+            "prompt_tokens": 31002,
+            "identical_output": false,
+            "baseline_rounds": 97,
+            "candidate_rounds": 92,
+            "baseline_ms_per_round": 41.18,
+            "candidate_ms_per_round": 34.55,
+            "baseline_draft_take": 11.0,
+            "candidate_draft_take": 11.8
+          }
+        ]
+      }
+    },
+    "no-verify-fp8": {
+      "combine_meta": {
+        "enabled": [
+          "verify-w8a8",
+          "prefill-fp8",
+          "replay-spill",
+          "dspine-attention"
+        ],
+        "disabled": [
+          "verify-fp8"
+        ],
+        "w8a8_min_seqs": 1,
+        "w8a8_ops": [
+          "verify_linear_34816_5120",
+          "verify_linear_5120_17408"
+        ],
+        "baseline_manifest_sha256": "ae10b8f7e722dcbc73dafe731d7261eadeae9f4f8f6913fbb192d0ea1f1e8253",
+        "source_manifest_sha256": {
+          "verify-w8a8": "b00dfee21bc50437ca9ffca2b5b2fd523c80422136f95f5cbdf9affae3e99316",
+          "prefill-fp8": "8719e55937131346c4ddcf2a280e4a935f5c7ab5836c5ac42aada630cc1aef2e",
+          "replay-spill": "2061fb396ce8a01cf006a86581dfc6715189115dcd7b27c60438f63211d65311",
+          "dspine-attention": "efa3f02e933d1e27197d059e08349a5d3a44fa778294b5086d13c06f43d2a6dd"
+        },
+        "candidate_manifest_sha256": "2c2c567e096f9b250c145a10f9dc79fc96a0d7745a5fe83486b1978d348e2531",
+        "module_count": 62,
+        "kern_verify_output": "\u001b[32m INFO\u001b[0m out/combined-ablation/no-verify-fp8/model.json: `qwen3.8-27b-fp8-dspine` schema v7, verified\n  rows      `tokens` <= 1024\n  groups    `seqs` <= 16\n  fill      count       `accepted` i32 [seqs]\n  fill      seq_len     `lengths` i32 [seqs]\n  fill      min_p       `min_p` f32 [seqs]\n  fill      tokens      `next_token` i64 [seqs]\n  fill      position    `positions` i64 [tokens]\n  fill      cu_seqlens  `q_indptr` i32 [17]\n  fill      seed        `seed` i64 [seqs]\n  fill      slot        `slots` i64 [tokens]\n  fill      temperature `temperature` f32 [seqs]\n  fill      token       `token_ids` i64 [tokens]\n  fill      top_k       `top_k` i32 [seqs]\n  fill      top_p       `top_p` f32 [seqs]\n  fill      tokens      `verify_tokens` i64 [seqs] x 16\n  pages     `pages` [seqs, 4097]\n  lines     `d.lines` [1, seqs]\n  lines     `gdn.lines` [48, seqs]\n  forward   `decode`: <= 1 sequences of 1 rows, hands back `next_token`\n  forward   `decode_batch`: <= 16 sequences of 1 rows, hands back `next_token`\n  forward   `prefill`: <= 1 sequences of rows as fed, hands back `next_token`\n  forward   `round`: <= 16 sequences of 16 rows, hands back `verify_tokens` counted by `accepted`\n  once      `load`"
+      },
+      "round_logits_probe": {
+        "elapsed_seconds": 61.41,
+        "total_rounds": 16,
+        "rounds_same_accepted_tokens": 9,
+        "baseline_total_accepted": 52,
+        "candidate_total_accepted": 49,
+        "scored_rounds": 1,
+        "scored_rows": 16,
+        "mean_kl": 0.013109063729643822,
+        "max_row_kl": 0.04152180999517441,
+        "rows_over_0_01_kl": 6,
+        "passes_0_01_per_row_gate": false,
+        "top1_flips": 3,
+        "flips_before_accepted_boundary": 1,
+        "causal_prefix_scored_rows": 92,
+        "causal_prefix_mean_kl": 0.006402845805100894,
+        "causal_prefix_max_kl": 0.04152180999517441,
+        "causal_prefix_rows_over_0_01_kl": 15
+      },
+      "free_running_rounds": {
+        "elapsed_seconds": 56.17,
+        "baseline_total_rounds": 339,
+        "candidate_total_rounds": 334,
+        "identical_sequences": 0,
+        "cases": [
+          {
+            "source": "code",
+            "prompt_tokens": 65,
+            "identical_output": false,
+            "baseline_rounds": 62,
+            "candidate_rounds": 56,
+            "baseline_ms_per_round": 33.58,
+            "candidate_ms_per_round": 32.72,
+            "baseline_draft_take": 21.4,
+            "candidate_draft_take": 25.0
+          },
+          {
+            "source": "chinese",
+            "prompt_tokens": 65,
+            "identical_output": false,
+            "baseline_rounds": 91,
+            "candidate_rounds": 79,
+            "baseline_ms_per_round": 33.62,
+            "candidate_ms_per_round": 32.73,
+            "baseline_draft_take": 12.0,
+            "candidate_draft_take": 14.9
+          },
+          {
+            "source": "long-8192",
+            "prompt_tokens": 7797,
+            "identical_output": false,
+            "baseline_rounds": 89,
+            "candidate_rounds": 99,
+            "baseline_ms_per_round": 38.86,
+            "candidate_ms_per_round": 33.84,
+            "baseline_draft_take": 12.5,
+            "candidate_draft_take": 10.6
+          },
+          {
+            "source": "long-32768",
+            "prompt_tokens": 31002,
+            "identical_output": false,
+            "baseline_rounds": 97,
+            "candidate_rounds": 100,
+            "baseline_ms_per_round": 41.18,
+            "candidate_ms_per_round": 36.0,
+            "baseline_draft_take": 11.0,
+            "candidate_draft_take": 10.4
+          }
+        ]
+      }
+    },
+    "lossless2": {
+      "combine_meta": {
+        "enabled": [
+          "replay-spill",
+          "dspine-attention"
+        ],
+        "disabled": [
+          "verify-w8a8",
+          "prefill-fp8",
+          "verify-fp8"
+        ],
+        "w8a8_min_seqs": null,
+        "w8a8_ops": null,
+        "baseline_manifest_sha256": "ae10b8f7e722dcbc73dafe731d7261eadeae9f4f8f6913fbb192d0ea1f1e8253",
+        "source_manifest_sha256": {
+          "replay-spill": "2061fb396ce8a01cf006a86581dfc6715189115dcd7b27c60438f63211d65311",
+          "dspine-attention": "efa3f02e933d1e27197d059e08349a5d3a44fa778294b5086d13c06f43d2a6dd"
+        },
+        "candidate_manifest_sha256": "7d8899ab47559f8398ab4b1f1cfcea0bd331c625d6d19f6df66df89d3ec85802",
+        "module_count": 54,
+        "kern_verify_output": "\u001b[32m INFO\u001b[0m out/combined-ablation/lossless2/model.json: `qwen3.8-27b-fp8-dspine` schema v7, verified\n  rows      `tokens` <= 1024\n  groups    `seqs` <= 16\n  fill      count       `accepted` i32 [seqs]\n  fill      seq_len     `lengths` i32 [seqs]\n  fill      min_p       `min_p` f32 [seqs]\n  fill      tokens      `next_token` i64 [seqs]\n  fill      position    `positions` i64 [tokens]\n  fill      cu_seqlens  `q_indptr` i32 [17]\n  fill      seed        `seed` i64 [seqs]\n  fill      slot        `slots` i64 [tokens]\n  fill      temperature `temperature` f32 [seqs]\n  fill      token       `token_ids` i64 [tokens]\n  fill      top_k       `top_k` i32 [seqs]\n  fill      top_p       `top_p` f32 [seqs]\n  fill      tokens      `verify_tokens` i64 [seqs] x 16\n  pages     `pages` [seqs, 4097]\n  lines     `d.lines` [1, seqs]\n  lines     `gdn.lines` [48, seqs]\n  forward   `decode`: <= 1 sequences of 1 rows, hands back `next_token`\n  forward   `decode_batch`: <= 16 sequences of 1 rows, hands back `next_token`\n  forward   `prefill`: <= 1 sequences of rows as fed, hands back `next_token`\n  forward   `round`: <= 16 sequences of 16 rows, hands back `verify_tokens` counted by `accepted`\n  once      `load`"
+      },
+      "round_logits_probe": {
+        "elapsed_seconds": 61.23,
+        "total_rounds": 16,
+        "rounds_same_accepted_tokens": 16,
+        "baseline_total_accepted": 52,
+        "candidate_total_accepted": 52,
+        "scored_rounds": 14,
+        "scored_rows": 224,
+        "mean_kl": 0.0006139815647787016,
+        "max_row_kl": 0.003515064250677824,
+        "rows_over_0_01_kl": 0,
+        "passes_0_01_per_row_gate": true,
+        "top1_flips": 2,
+        "flips_before_accepted_boundary": 0,
+        "causal_prefix_scored_rows": 246,
+        "causal_prefix_mean_kl": 0.0006043231140772956,
+        "causal_prefix_max_kl": 0.003515064250677824,
+        "causal_prefix_rows_over_0_01_kl": 0
+      },
+      "free_running_rounds": {
+        "elapsed_seconds": 56.96,
+        "baseline_total_rounds": 339,
+        "candidate_total_rounds": 356,
+        "identical_sequences": 1,
+        "cases": [
+          {
+            "source": "code",
+            "prompt_tokens": 65,
+            "identical_output": true,
+            "baseline_rounds": 62,
+            "candidate_rounds": 62,
+            "baseline_ms_per_round": 33.58,
+            "candidate_ms_per_round": 32.67,
+            "baseline_draft_take": 21.4,
+            "candidate_draft_take": 21.4
+          },
+          {
+            "source": "chinese",
+            "prompt_tokens": 65,
+            "identical_output": false,
+            "baseline_rounds": 91,
+            "candidate_rounds": 98,
+            "baseline_ms_per_round": 33.62,
+            "candidate_ms_per_round": 32.7,
+            "baseline_draft_take": 12.0,
+            "candidate_draft_take": 11.0
+          },
+          {
+            "source": "long-8192",
+            "prompt_tokens": 7797,
+            "identical_output": false,
+            "baseline_rounds": 89,
+            "candidate_rounds": 99,
+            "baseline_ms_per_round": 38.86,
+            "candidate_ms_per_round": 33.84,
+            "baseline_draft_take": 12.5,
+            "candidate_draft_take": 10.5
+          },
+          {
+            "source": "long-32768",
+            "prompt_tokens": 31002,
+            "identical_output": false,
+            "baseline_rounds": 97,
+            "candidate_rounds": 97,
+            "baseline_ms_per_round": 41.18,
+            "candidate_ms_per_round": 36.1,
+            "baseline_draft_take": 11.0,
+            "candidate_draft_take": 11.1
+          }
+        ]
+      }
+    }
+  }
+}
