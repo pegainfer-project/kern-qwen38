@@ -8,7 +8,7 @@ context limit. The optional [DSpine bundle](docs/dspine.md) adds native
 16-row speculative rounds; the target checkpoint's own MTP head is not connected.
 
 This repository contains its own sources, generator, build scripts and GPU gates.
-It does not read sibling repository directories. FlashInfer is a pinned submodule
+Outside `sm103/`, it does not read sibling repository directories. FlashInfer is a pinned submodule
 under `third_party/flashinfer`. Operator origins are
 [kern-qwen3](https://github.com/pegainfer-project/kern-qwen3),
 [kern](https://github.com/pegainfer-project/kern) and
@@ -127,3 +127,10 @@ cache memory. Supply a wheel built from the tested runtime revision with `uv run
 dependency and is not installed globally. `--boundary-only` checks the last valid
 context position with explicitly supplied zero prior KV/state; it tests indexing,
 not full-length model quality. `scripts/long_check.py` exercises real 16K prefill.
+
+## GB300 (SM103)
+
+[`sm103/`](sm103/) is the earlier BF16 line for one GB300, with the DFlash2
+draft and the manifests hosted by vLLM and SGLang: kernels captured from vLLM,
+published as [Pegainfer/kern-qwen38-sm103](https://huggingface.co/Pegainfer/kern-qwen38-sm103).
+It moved here from the kern repository and generates against a kern checkout.
