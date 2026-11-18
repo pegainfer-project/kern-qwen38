@@ -1,0 +1,40 @@
+"""Guard the numeric execution contracts and semantic names of the Qwen examples."""
+import hashlib
+import json
+import os
+import pathlib
+import sys
+import unittest
+
+sys.path.insert(1, str(pathlib.Path(os.environ["KERN"]) / "tools"))
+from kern_manifest import resolve_constants  # noqa: E402
+from qwen_constants import name_constants  # noqa: E402
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+# Canonical hashes guard the retained Qwen3.8 execution contracts.
+BASELINES = {
+    "qwen3.8-27b-dflash2.json": "9dd8b22e982da794cef190170a81e8c5be5713bedf8d83669e9701064ce95b25",
+    "qwen3.8-27b.json": "bb2886e58bfc201820ea6afddbaa4ceb7c7d72950509bb32fb49ed15fd87e8e2"
+}
+
+
+class QwenConstantsTests(unittest.TestCase):
+    def test_execution_contracts_and_reproducible_generation(self):
+        for name, digest in BASELINES.items():
+            with self.subTest(name=name):
+                named = json.loads((ROOT / "examples" / name).read_text())
+                literal = resolve_constants(named)
+                canonical = json.dumps(literal, sort_keys=True, separators=(",", ":")).encode()
+                self.assertEqual(hashlib.sha256(canonical).hexdigest(), digest)
+                self.assertEqual(name_constants(literal), named)
+                self.assertEqual(name_constants(named), named)
+
+    def test_equal_numbers_keep_distinct_meanings(self):
+        qwen3 = json.loads((ROOT / "examples/qwen3.8-27b.json").read_text())
+        self.assertEqual(qwen3["buffers"]["block_table"]["shape"][-1], "MAX_BLOCKS_PER_SEQ")
+        self.assertEqual(qwen3["buffers"]["x"]["shape"][-1], "HIDDEN_SIZE")
+        draft = json.loads((ROOT / "examples/qwen3.8-27b-dflash2.json").read_text())
+        for name, expected in [("q_n", "Q_DIM"), ("gdn_v", "GDN_V_DIM"), ("d_qkv", "DRAFT_QKV_DIM")]:
+            self.assertEqual(draft["buffers"][name]["shape"][-1], expected)
+        self.assertEqual(draft["buffers"]["hidden_r"]["shape"], ["MAX_VERIFY_TOKENS", "SELECTOR_RANK"])
+        self.assertEqual(draft["buffers"]["model.layers.3.self_attn.q_norm.weight_p1"]["shape"], ["HEAD_DIM"])
